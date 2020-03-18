@@ -2,7 +2,7 @@
 # Author: Rion B Correia
 # Date: March 17, 2020
 #
-# Description: Inserts `p2876_demographics.csv` to MySQL
+# Description: Inserts `p2876_demographics.csv` to MySQL.
 #
 #
 import configparser
@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     # Load Data
     print('Loading Data')
-    df = pd.read_csv('../data/p2876_demographics.csv', index_col=None, nrows=10, dtype={'ZIP': str})
+    df = pd.read_csv('../data/p2876_demographics.csv', index_col=None, nrows=None, dtype={'ZIP': str})
 
     # PreProcessing
     print('PreProcessing')
@@ -81,6 +81,7 @@ if __name__ == '__main__':
 
     # Zip
     def preprocessing_zip(x):
+        """ Preprocesses the raw ZIP field"""
         # Null
         if pd.isnull(x):
             return np.nan
@@ -97,6 +98,7 @@ if __name__ == '__main__':
 
     #
     def preprocessing_split_zip(x):
+        """ Separates ZIP codes '47408-1234' into ('47408', '1234') """
         # Null
         if pd.isnull(x):
             return pd.Series({'ZIP': np.nan, 'ZIP+4': np.nan})

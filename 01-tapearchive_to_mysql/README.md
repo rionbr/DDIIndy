@@ -1,13 +1,13 @@
 # DDI Indy - Data Management
 
 This file traces commands used to create and give permission and handle the raw data.
-This file will provide little information to users without the necessary permissions at the Indiana University UITS systems.
+This file will provide little information to users without the necessary permissions to the Indiana University UITS systems.
 
 
 ## MySQL Enterprise information
 
 
-This is the project schema: `casci_ddi_indy`.
+Project schema: `casci_ddi_indy`.
 
 
 ### Create Tables
@@ -27,11 +27,18 @@ CREATE TABLE patient (
 ```
 
 ```
+CREATE TABLE ndc (
+	id_catalog BIGINT COMMENT "CATALOGCVCD",
+	ndc BIGINT COMMENT "NDC"
+) ENGINE=InnoDB;
+```
+
+```
 CREATE TABLE medication_u (
 	id_medication INT PRIMARY KEY AUTO_INCREMENT,
 	id_patient INT,
 	id_catalog BIGINT COMMENT "CATALOGCVCD",
-	ndc INT(10) COMMENT "NDC",
+	ndc BIGINT COMMENT "NDC",
 	dt_order DATE,
 	status INT(2) COMMENT "1=Sent; 2=Ordered; 3=Completed; 99=Discontinued",
 	name TEXT,
@@ -48,6 +55,7 @@ CREATE TABLE medication_u (
 ) ENGINE=InnoDB;
 ```
 
+
 ### Drop Tables
 
 ```
@@ -58,6 +66,7 @@ DROP TABLE IF EXISTS ndc;
 
 
 ### MySQL Management
+
 
 Show help on creating schemas and users:
 

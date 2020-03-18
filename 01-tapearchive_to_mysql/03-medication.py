@@ -2,7 +2,7 @@
 # Author: Rion B Correia
 # Date: March 17, 2020
 #
-# Description: Inserts `p2876_meds_01_t.csv` to MySQL.
+# Description: Inserts `p2876_meds_{d}_u.csv` to MySQL.
 #
 #
 import configparser
@@ -91,6 +91,6 @@ if __name__ == '__main__':
             'DURATIONUNIT': 'duration_unit'
         }, inplace=True)
         df = df.loc[:, ['id_patient', 'id_catalog', 'ndc', 'dt_order', 'status', 'name', 'dose_strength', 'dose_strength_unit', 'qt_dispensed', 'qt_dispensed_unit', 'qt_refill', 'nr_refill', 'duration', 'duration_unit']]
-        df.to_sql(name='medication_{ftype}'.format(ftype=ftype), con=engine, if_exists='append', index=False, chunksize=1, method='multi')
+        df.to_sql(name='medication_{ftype}'.format(ftype=ftype), con=engine, if_exists='append', index=False, chunksize=1000, method='multi')
 
     print('Done.')

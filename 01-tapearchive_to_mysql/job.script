@@ -6,7 +6,7 @@
 #PBS -N ddiindy-sda2rda
 #PBS -j oe 
 
-cd /N/u/rionbr/Carbonate/ddi_indy/01-tapearchive_to_mysql
+cd /N/u/rionbr/Carbonate/DDIIndy/01-tapearchive_to_mysql
 
 module load anaconda/python3.7/2019.03
 

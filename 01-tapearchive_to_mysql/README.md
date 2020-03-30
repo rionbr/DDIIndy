@@ -16,11 +16,11 @@ Project schema: `casci_ddi_indy`.
 ```
 CREATE TABLE patient (
 	id_patient INT PRIMARY KEY,
-	gender INT(1) COMMENT "1=Male; 2=Female",
+	gender VARCHAR(6) COMMENT "Male; Female",
 	dob DATE,
 	age_today INT(3) GENERATED ALWAYS AS (TIMESTAMPDIFF(YEAR, dob, '2020-01-01')) VIRTUAL,
-	ethnicity INT(2) COMMENT "1=Not Hispanic or Latino; 2=Not Hispanic, Latino/a, or Spanish Origin; 99=Unkonwn",
-	race INT(2) COMMENT "1=White; 2=Black/AA=2; 3=Hispanic; 4=Asian; 5=Indian; 6=Island; 10=More than 1 race; 99=Unknown",
+	ethnicity VARCHAR(25) COMMENT "Not Hispanic or Latino; Not Hispanic, Latino/a, or Spanish Origin; Unkonwn",
+	race VARCHAR(25) COMMENT "White; Black; Hispanic; Asian; Indian; Islander; >1 race; Unknown",
 	zip5 INT(5) COMMENT "First 5 ZIP numbers",
 	zip4 INT(4) COMMENT "Last 4 ZIP numbers"
 ) ENGINE=InnoDB;
@@ -28,19 +28,20 @@ CREATE TABLE patient (
 
 ```
 CREATE TABLE ndc (
-	id_catalog BIGINT COMMENT "CATALOGCVCD",
+	id_catalog BIGINT PRIMARY KEY COMMENT "CATALOGCVCD",
 	ndc BIGINT COMMENT "NDC"
 ) ENGINE=InnoDB;
 ```
 
 ```
-CREATE TABLE medication_u (
+CREATE TABLE medication (
 	id_medication INT PRIMARY KEY AUTO_INCREMENT,
-	id_patient INT,
+	id_drugbank VARCHAR(7),
+	id_patient INT NOT NULL,
 	id_catalog BIGINT COMMENT "CATALOGCVCD",
-	ndc BIGINT COMMENT "NDC",
-	dt_order DATE,
-	status INT(2) COMMENT "1=Sent; 2=Ordered; 3=Completed; 99=Discontinued",
+	gpi BIGINT COMMENT "GPI",
+	dt_order DATE NOT NULL,
+	status VARCHAR(15) COMMENT "Sent; Ordered; Completed; Discontinued",
 	name TEXT,
 	dose_strength FLOAT(10,2),
 	dose_strength_unit VARCHAR(15),
@@ -49,10 +50,21 @@ CREATE TABLE medication_u (
 	qt_refill FLOAT(10,2) COMMENT "REFILLQTY",
 	nr_refill INT(2) COMMENT "NBRREFILLS",
 	duration INT(3),
-	duration_unit VARCHAR(15)
-	/*CONSTRAINT fk_patient */
-	/*FOREIGN KEY (id_patient) REFERENCES patient(id_patient) */
+	duration_unit VARCHAR(15),
+	is_topic BOOLEAN DEFAULT FALSE,
+	is_ophthalmo BOOLEAN DEFAULT FALSE,
+	is_vaccine BOOLEAN DEFAULT FALSE
 ) ENGINE=InnoDB;
+
+ALTER TABLE medication
+	ADD CONSTRAINT fk_id_patient FOREIGN KEY (id_patient)
+	REFERENCES patient (id_patient)
+	ON UPDATE CASCADE ON DELETE RESTRICT;
+	
+ALTER TABLE medication
+	ADD CONSTRAINT fk_id_catalog FOREIGN KEy (id_catalog)
+	REFERENCES ndc (id_catalog)
+	ON UPDATE CASCADE ON DELETE RESTRICT;
 ```
 
 
@@ -60,7 +72,7 @@ CREATE TABLE medication_u (
 
 ```
 DROP TABLE IF EXISTS patient;
-DROP TABLE IF EXISTS medication_u;
+DROP TABLE IF EXISTS medication;
 DROP TABLE IF EXISTS ndc;
 ```
 

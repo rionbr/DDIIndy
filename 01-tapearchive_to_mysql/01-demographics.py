@@ -35,13 +35,16 @@ if __name__ == '__main__':
     df['DOB'] = pd.to_datetime(df['DOB'], format='%Y-%m-%d')
 
     # Gender
+    """
     df['GENDER'] = df['GENDER'].replace(
         {
             'Male': 1,
             'Female': 2
         })
+    """
 
     # Ethnicity
+    """
     df['ETHNICITY'] = df['ETHNICITY'].replace(
         {
             'Not Hispanic or Latino': 1,
@@ -51,32 +54,33 @@ if __name__ == '__main__':
             'Unreported/Refused to Report': 99,
             'Declined': 99
         })
+    """
     # Race
     df['RACE'] = df['RACE'].replace(
         {
             # White
-            'White': 1,
-            'CAUCASIAN': 1,
+            'White': 'White',
+            'CAUCASIAN': 'White',
             # Black/AA
-            'Black or African American': 2,
+            'Black or African American': 'Black',
             # Hispanic
-            'HISPANIC': 3,
+            'HISPANIC': 'Hispanic',
             # Asian
-            'Asian': 4,
-            'Other Asian': 4,
+            'Asian': 'Asian',
+            'Other Asian': 'Asian',
             # Native
-            'American Indian or Alaska Native': 5,
+            'American Indian or Alaska Native': 'Indian',
             # Islander
-            'Other Pacific Islander': 6,
-            'Native Hawaiian or Other Pacific Islande': 6,
+            'Other Pacific Islander': 'Islander',
+            'Native Hawaiian or Other Pacific Islande': 'Islander',
             # >1 Race
-            'More than one race': 10,
-            'BI-RACIAL': 10,
+            'More than one race': 'Multi race',
+            'BI-RACIAL': 'Multi race',
             # Other
-            'Unknown': 99,
-            'Refused': 99,
-            'Unreported/Refused to report race': 99,
-            'Decline to Answer': 99,
+            'Unknown': 'Unknown',
+            'Refused': 'Unknown',
+            'Unreported/Refused to report race': 'Unknown',
+            'Decline to Answer': 'Unknown',
         })
 
     # Zip

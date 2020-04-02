@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -k o
-#PBS -l nodes=1:ppn=1,vmem=4gb,walltime=30:00
+#PBS -l nodes=1:ppn=1,vmem=16gb,walltime=30:00
 #PBS -M rionbr@indiana.edu
 #PBS -m abe
 #PBS -N ddiindy-sda2rda
@@ -8,10 +8,10 @@
 
 cd /N/u/rionbr/Carbonate/DDIIndy/01-insert_to_mysql
 
-echo "Load Python module"
+echo "\n> Load Python module\n"
 module load anaconda/python3.7/2019.03
 
-echo "Getting MySQL key/pass from config.ini"
+echo "\n> Getting MySQL key/pass from config.ini\n"
 pass=$(python << EOI
 import configparser
 c = configparser.ConfigParser()
@@ -20,30 +20,30 @@ print(c['IU-RDC-MySQL']['pass'])
 EOI
 )
 
-echo "SQL: Create Tables"
+echo "\n> SQL: Create Tables\n"
 mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_tables.sql 
 
 
-echo "Processing: Demographics"
+echo "\n> Processing: Demographics\n"
 python 01-demographics.py
 
-echo "Processing: NDC"
+echo "\n> Processing: NDC\n"
 python 02-ndc.py
 
-echo "Processing: Drugs"
+echo "\n> Processing: Drugs\n"
 python 03-drug.py
 
-echo "Processing: Interactions"
+echo "\n> Processing: Interactions\n"
 python 04-interactions.py
 
-echo "Processing: Medications"
+echo "\n> Processing: Medications\n"
 python 05-medication.py
 
 
-echo "SQL: Create Foreign Keys"
+echo "\n> SQL: Create Foreign Keys\n"
 mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_fks.sql 
 
-echo "SQL: Create Views"
+echo "\n> SQL: Create Views\n"
 mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_views.sql 
 
 

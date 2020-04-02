@@ -14,9 +14,9 @@ DROP VIEW IF EXISTS dw_interactions;
 DROP TABLE IF EXISTS coadministration;
 DROP TABLE IF EXISTS medication_drug;
 /* */
+DROP TABLE IF EXISTS medication;
 DROP TABLE IF EXISTS patient;
 DROP TABLE IF EXISTS ndc;
-DROP TABLE IF EXISTS medication;
 DROP TABLE IF EXISTS drug;
 /* */ 
 DROP TABLE IF EXISTS drugbank_interaction;

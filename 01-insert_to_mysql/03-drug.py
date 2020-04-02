@@ -69,7 +69,8 @@ if __name__ == '__main__':
 
         name = drug.find("ns:name", ns).text
 
-        print('- {:s}: {:s}'.format(id_drugbank, name))
+        if DEBUG:
+            print('- {:s}: {:s}'.format(id_drugbank, name))
 
         dtype = drug.attrib['type']
         description = drug.find("ns:description", ns).text
@@ -95,5 +96,4 @@ if __name__ == '__main__':
     # Insert to MysSQL
     #
     print('Insert to MySQL (this may take a while)')
-
     df.to_sql(name='drug', con=engine, if_exists='append', index=False, chunksize=500, method='multi')

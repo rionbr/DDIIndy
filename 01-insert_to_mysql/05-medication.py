@@ -9,7 +9,7 @@ import configparser
 import numpy as np
 import pandas as pd
 import sqlalchemy
-pd.set_option('display.max_rows', 50)
+pd.set_option('display.max_rows', 10)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
@@ -62,15 +62,20 @@ if __name__ == '__main__':
 
     # Map Dictionary
     dfD = pd.read_csv('data/map-drug-name-drugbank.csv', usecols=['ID_DRUGBANK', 'TOPIC', 'OPHTHALMO', 'VACCINE', 'MED_NAME'], na_values='None')
+    dfD['MED_NAME'] = dfD['MED_NAME'].str.strip()
+    dfD['ID_DRUGBANK'] = dfD['ID_DRUGBANK'].str.strip()
     dfD.dropna(subset=['ID_DRUGBANK'], inplace=True)
-    #
-    # dfM.explode('ID_DRUGBANK') # Only available in Pandas>0.25
-    #
+    dfDd = dfD.copy()
+    
+    # Unique Index
+    dfD.set_index('MED_NAME', inplace=True)
+
+    # Duplicated Index
     n_ids = []
     n_data = []
-    dfD['ID_DRUGBANK'] = dfD['ID_DRUGBANK'].str.split(',')
-    dfD = dfD.set_index('ID_DRUGBANK')
-    for (ids, data) in zip(dfD.index, dfD.values):
+    dfDd['ID_DRUGBANK'] = dfDd['ID_DRUGBANK'].str.split(',')
+    dfDd = dfDd.set_index('ID_DRUGBANK')
+    for (ids, data) in zip(dfDd.index, dfDd.values):
         if isinstance(ids, list):
             for id in ids:
                 n_ids.append(id)
@@ -78,12 +83,8 @@ if __name__ == '__main__':
         else:
             n_ids.append(ids)
             n_data.append(data)
-    dfD = pd.DataFrame.from_records(data=n_data, index=pd.Series(n_ids, name='ID_DRUG'), columns=['TOPIC', 'OPHTHALMO', 'VACCINE', 'MED_NAME'])
-    dfD = dfD.reset_index().set_index('MED_NAME')
-
-    # Truncate table
-    print('Truncating Table')
-    Q = engine.execute("TRUNCATE TABLE medication".format(ftype=ftype))
+    dfDd = pd.DataFrame.from_records(data=n_data, index=pd.Series(n_ids, name='ID_DRUG'), columns=['TOPIC', 'OPHTHALMO', 'VACCINE', 'MED_NAME'])
+    dfDd = dfDd.reset_index().set_index('MED_NAME')
 
     print("Load Medicine Files")
     dtype = {
@@ -100,7 +101,7 @@ if __name__ == '__main__':
 
         dft = pd.read_csv('../data/{file:s}'.format(file=file), index_col=None, nrows=None, dtype=dtype)
         ldf.append(dft)
-        break
+        #break
 
     print("Concatenating DataFrames")
     dfM = pd.concat(ldf, axis='index', ignore_index=True, verify_integrity=False)
@@ -144,14 +145,15 @@ if __name__ == '__main__':
     # Remove name left/right whitespace
     dfM['MED_NAME'] = dfM['MED_NAME'].str.strip()
 
+    # Left Join TOPIC, OPHTHALMO, VACCINE
+    dfM = dfM.join(dfD[['TOPIC', 'OPHTHALMO', 'VACCINE']].fillna(False), on='MED_NAME', how='left')
     #
     # Medication-Drug
     #
-    # Left Join (medication_drug)
-    dfMD = dfM.set_index('MED_NAME')[['ID_MEDICATION']].merge(dfD[['ID_DRUG']], left_index=True, right_index=True, how='left', sort=False)
-    dfMD.dropna(inplace=True)
+    # Inner Join (medication_drug)
+    dfMD = dfM.set_index('MED_NAME')[['ID_MEDICATION']].join(dfDd[['ID_DRUG']], on='MED_NAME', how='inner')
     dfMD['ID_MEDICATION_DRUG'] = np.arange(1, len(dfMD) + 1)
-    dfMD.reset_index(inplace=True, drop=True)
+    dfMD.sort_values('ID_MEDICATION_DRUG').reset_index(inplace=True, drop=True)
 
     #
     # Insert to MysSQL

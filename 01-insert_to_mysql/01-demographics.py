@@ -32,7 +32,7 @@ def preprocessing_split_zip(x):
     """ Separates ZIP codes '47408-1234' into ('47408', '1234') """
     # Null
     if pd.isnull(x):
-        return pd.Series({'ZIP': np.nan, 'ZIP+4': np.nan})
+        return pd.Series({'ZIP5': np.nan, 'ZIP4': np.nan})
     #
     xl = x.split('-')
     zip5 = xl[0]
@@ -40,7 +40,7 @@ def preprocessing_split_zip(x):
         zip4 = None
     else:
         zip4 = xl[1]
-    return pd.Series({'ZIP': zip5, 'ZIP4': zip4})
+    return pd.Series({'ZIP5': zip5, 'ZIP4': zip4})
 
 
 def handle_duplicated_patients(dfg):

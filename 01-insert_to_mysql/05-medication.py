@@ -197,7 +197,7 @@ if __name__ == '__main__':
         'ID_MEDICATION': 'id_medication',
         'ID_DRUG': 'id_drug'
     }, inplace=True)
-    dfMD.to_sql(name='medication_drug', con=engine, if_exists='append', index=False, chunksize=1, method='multi')
+    dfMD.to_sql(name='medication_drug', con=engine, if_exists='append', index=False, chunksize=5000, method='multi')
 
     #
     print('Done.')

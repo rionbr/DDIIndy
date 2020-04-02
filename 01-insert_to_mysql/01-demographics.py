@@ -16,6 +16,9 @@ def preprocessing_zip(x):
     # Null
     if pd.isnull(x):
         return np.nan
+    # Remove Zips with \x00
+    x = x.replace("\X00", '')
+    x = x.replace("-", '')
     #
     if len(x) == 10:
         # Remove empty zeros '12345-0000'
@@ -155,7 +158,7 @@ if __name__ == '__main__':
 
     # DOB
     df['DOB'] = pd.to_datetime(df['DOB'], format='%Y-%m-%d')
-    
+
     #
     print('Insert to MySQL (this may take a while)')
     df.rename(columns={

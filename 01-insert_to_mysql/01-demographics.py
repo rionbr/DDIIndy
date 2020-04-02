@@ -96,9 +96,6 @@ if __name__ == '__main__':
     # PreProcessing
     print('PreProcessing')
 
-    # DOB
-    df['DOB'] = pd.to_datetime(df['DOB'], format='%Y-%m-%d')
-
     # Gender
     """
     df['GENDER'] = df['GENDER'].replace(
@@ -156,6 +153,9 @@ if __name__ == '__main__':
     df = df.groupby('STUDY_ID').apply(handle_duplicated_patients)
     df.reset_index(drop=True, inplace=True)
 
+    # DOB
+    df['DOB'] = pd.to_datetime(df['DOB'], format='%Y-%m-%d')
+    
     #
     print('Insert to MySQL (this may take a while)')
     df.rename(columns={

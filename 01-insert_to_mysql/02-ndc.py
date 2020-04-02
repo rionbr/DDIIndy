@@ -6,7 +6,6 @@
 #
 #
 import configparser
-import numpy as np
 import pandas as pd
 import sqlalchemy
 
@@ -36,4 +35,4 @@ if __name__ == '__main__':
         'NDC': 'ndc',
     }, inplace=True)
     df = df.loc[:, ['id_catalog', 'ndc']]
-    df.to_sql(name='ndc', con=engine, if_exists='append', index=False, chunksize=1, method='multi')
+    df.to_sql(name='ndc', con=engine, if_exists='append', index=False, chunksize=1000, method='multi')

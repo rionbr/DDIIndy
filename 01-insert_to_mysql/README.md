@@ -10,71 +10,9 @@ This file will provide little information to users without the necessary permiss
 Project schema: `casci_ddi_indy`.
 
 
-### Create Tables
+### Database Tables
 
-
-```
-CREATE TABLE patient (
-	id_patient INT PRIMARY KEY,
-	gender VARCHAR(6) COMMENT "Male; Female",
-	dob DATE,
-	age_today INT(3) GENERATED ALWAYS AS (TIMESTAMPDIFF(YEAR, dob, '2020-01-01')) VIRTUAL,
-	ethnicity VARCHAR(25) COMMENT "Not Hispanic or Latino; Not Hispanic, Latino/a, or Spanish Origin; Unkonwn",
-	race VARCHAR(25) COMMENT "White; Black; Hispanic; Asian; Indian; Islander; >1 race; Unknown",
-	zip5 INT(5) COMMENT "First 5 ZIP numbers",
-	zip4 INT(4) COMMENT "Last 4 ZIP numbers"
-) ENGINE=InnoDB;
-```
-
-```
-CREATE TABLE ndc (
-	id_catalog BIGINT PRIMARY KEY COMMENT "CATALOGCVCD",
-	ndc BIGINT COMMENT "NDC"
-) ENGINE=InnoDB;
-```
-
-```
-CREATE TABLE medication (
-	id_medication INT PRIMARY KEY AUTO_INCREMENT,
-	id_drugbank VARCHAR(7),
-	id_patient INT NOT NULL,
-	id_catalog BIGINT COMMENT "CATALOGCVCD",
-	gpi BIGINT COMMENT "GPI",
-	dt_order DATE NOT NULL,
-	status VARCHAR(15) COMMENT "Sent; Ordered; Completed; Discontinued",
-	name TEXT,
-	dose_strength FLOAT(10,2),
-	dose_strength_unit VARCHAR(15),
-	qt_dispensed FLOAT(10,2),
-	qt_dispensed_unit VARCHAR(15),
-	qt_refill FLOAT(10,2) COMMENT "REFILLQTY",
-	nr_refill INT(2) COMMENT "NBRREFILLS",
-	duration INT(3),
-	duration_unit VARCHAR(15),
-	is_topic BOOLEAN DEFAULT FALSE,
-	is_ophthalmo BOOLEAN DEFAULT FALSE,
-	is_vaccine BOOLEAN DEFAULT FALSE
-) ENGINE=InnoDB;
-
-ALTER TABLE medication
-	ADD CONSTRAINT fk_id_patient FOREIGN KEY (id_patient)
-	REFERENCES patient (id_patient)
-	ON UPDATE CASCADE ON DELETE RESTRICT;
-	
-ALTER TABLE medication
-	ADD CONSTRAINT fk_id_catalog FOREIGN KEy (id_catalog)
-	REFERENCES ndc (id_catalog)
-	ON UPDATE CASCADE ON DELETE RESTRICT;
-```
-
-
-### Drop Tables
-
-```
-DROP TABLE IF EXISTS patient;
-DROP TABLE IF EXISTS medication;
-DROP TABLE IF EXISTS ndc;
-```
+See `script.sql` for MySQL table creation.
 
 
 ### MySQL Management

@@ -1,0 +1,50 @@
+#!/bin/bash
+#PBS -k o
+#PBS -l nodes=1:ppn=1,vmem=4gb,walltime=30:00
+#PBS -M rionbr@indiana.edu
+#PBS -m abe
+#PBS -N ddiindy-sda2rda
+#PBS -j oe 
+
+cd /N/u/rionbr/Carbonate/DDIIndy/01-insert_to_mysql
+
+echo "Load Python module"
+module load anaconda/python3.7/2019.03
+
+echo "Getting MySQL key/pass from config.ini"
+pass=$(python << EOI
+import configparser
+c = configparser.ConfigParser()
+c.read('../config.ini')
+print(c['IU-RDC-MySQL']['pass'])
+EOI
+)
+
+echo "SQL: Create Tables"
+mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_tables.sql 
+
+
+echo "Processing: Demographics"
+python 01-demographics.py
+
+echo "Processing: NDC"
+python 02-ndc.py
+
+echo "Processing: Drugs"
+python 03-drug.py
+
+echo "Processing: Interactions"
+python 04-interactions.py
+
+echo "Processing: Medications"
+python 05-medication.py
+
+
+echo "SQL: Create Foreign Keys"
+mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_fks.sql 
+
+echo "SQL: Create Views"
+mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_views.sql 
+
+
+echo "Done."

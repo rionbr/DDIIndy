@@ -61,12 +61,13 @@ if __name__ == '__main__':
     ftype = 'u'
 
     # Map Dictionary
+    print("Load Mapping File.")
     dfD = pd.read_csv('data/map-drug-name-drugbank.csv', usecols=['ID_DRUGBANK', 'TOPIC', 'OPHTHALMO', 'VACCINE', 'MED_NAME'], na_values='None')
     dfD['MED_NAME'] = dfD['MED_NAME'].str.strip()
     dfD['ID_DRUGBANK'] = dfD['ID_DRUGBANK'].str.strip()
     dfD.dropna(subset=['ID_DRUGBANK'], inplace=True)
     dfDd = dfD.copy()
-    
+
     # Unique Index
     dfD.set_index('MED_NAME', inplace=True)
 
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     dfDd = pd.DataFrame.from_records(data=n_data, index=pd.Series(n_ids, name='ID_DRUG'), columns=['TOPIC', 'OPHTHALMO', 'VACCINE', 'MED_NAME'])
     dfDd = dfDd.reset_index().set_index('MED_NAME')
 
-    print("Load Medicine Files")
+    print("Load Medicine Files.")
     dtype = {
         'STRENGTHDOSEUNIT': 'object',
         'DISPENSEQTYUNIT': 'object',
@@ -101,7 +102,7 @@ if __name__ == '__main__':
 
         dft = pd.read_csv('../data/{file:s}'.format(file=file), index_col=None, nrows=None, dtype=dtype)
         ldf.append(dft)
-        #break
+        # break
 
     print("Concatenating DataFrames")
     dfM = pd.concat(ldf, axis='index', ignore_index=True, verify_integrity=False)
@@ -131,7 +132,11 @@ if __name__ == '__main__':
 
     # Dose Strength Unit
     dfM['STRENGTHDOSEUNIT'] = dfM['STRENGTHDOSEUNIT'].replace({
-        'Unit(s)': 'Units'
+        'inhalation': 'Inhalation',
+        'IntlUnits': 'Intl Units',
+        'Unit(s)': 'Units',
+        'MillionUnits': 'Million Units',
+        'Milliunits/m': 'Million Units/m'
     })
 
     # Quantity dispensed
@@ -139,7 +144,14 @@ if __name__ == '__main__':
 
     # Quantity dispensed unit
     dfM['DISPENSEQTYUNIT'] = dfM['DISPENSEQTYUNIT'].replace({
+        'AUC(Carboplatin)': 'AUC (Carboplatin)',
+        'inhalation': 'Inhalation',
+        'Pack': 'Packet',
         'packet(s)': 'Packet',
+        'kit(s)': 'Kit',
+        'Units': 'Unit',
+        'Unit(s)': 'Unit',
+        'MillionUnits': 'Million Units'
     })
 
     # Remove name left/right whitespace

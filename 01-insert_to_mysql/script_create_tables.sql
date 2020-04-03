@@ -27,7 +27,7 @@ DROP TABLE IF EXISTS drugbank_interaction;
 */
 CREATE TABLE patient (
 	id_patient INT PRIMARY KEY,
-	gender VARCHAR(6) COMMENT "Male; Female",
+	gender VARCHAR(7) COMMENT "Male; Female",
 	dob DATE,
 	age_today INT(3) GENERATED ALWAYS AS (TIMESTAMPDIFF(YEAR, dob, '2020-01-01')) VIRTUAL,
 	ethnicity VARCHAR(50) COMMENT "Not Hispanic/Latino; Not Hispanic/Latino/Spanish; Hispanic/Latino; Unknown",
@@ -59,9 +59,9 @@ CREATE TABLE medication (
 	status VARCHAR(15) COMMENT "Sent; Ordered; Completed; Discontinued",
 	name TEXT,
 	dose_strength FLOAT(14,2),
-	dose_strength_unit VARCHAR(15),
+	dose_strength_unit VARCHAR(25),
 	qt_dispensed FLOAT(14,2),
-	qt_dispensed_unit VARCHAR(15),
+	qt_dispensed_unit VARCHAR(25),
 	qt_refill FLOAT(14,2) COMMENT "REFILLQTY",
 	nr_refill INT(2) COMMENT "NBRREFILLS",
 	duration INT(3),

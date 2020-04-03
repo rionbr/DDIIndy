@@ -13,37 +13,35 @@ import sqlalchemy
 
 def preprocessing_zip(x):
     """ Preprocesses the raw ZIP field"""
-    # Null
-    if pd.isnull(x):
-        return np.nan
+    x = str(x)
     # Remove Zips with \x00
     x = x.replace("\X00", '')
+    x = x.replace(" ", '')
     x = x.replace("-", '')
-    #
-    if len(x) == 10:
-        # Remove empty zeros '12345-0000'
+
+    # length < 5 ; NaN
+    if len(x) < 5:
+        x = ''
+
+    # length == 5; but zeros
+    elif len(x) == 5:
+        if x == '00000':
+            x = ''
+
+    # length == 6, 7, 8;
+    elif len(x) in [6, 7, 8]:
+        x = x[:5]
+
+    # length == 9; but zeros
+    elif len(x) == 9:
         if x[-4:] == '0000':
             x = x[:5]
-    #
+
+    # all normed, insert hiphen
     if len(x) == 9:
         # Split into '12345-1234' if '123451234'
         x = x[:5] + '-' + x[-4:]
     return x
-
-
-def preprocessing_split_zip(x):
-    """ Separates ZIP codes '47408-1234' into ('47408', '1234') """
-    # Null
-    if pd.isnull(x):
-        return pd.Series({'ZIP5': np.nan, 'ZIP4': np.nan})
-    #
-    xl = x.split('-')
-    zip5 = xl[0]
-    if len(xl) == 1:
-        zip4 = None
-    else:
-        zip4 = xl[1]
-    return pd.Series({'ZIP5': zip5, 'ZIP4': zip4})
 
 
 def handle_duplicated_patients(dfg):
@@ -100,13 +98,11 @@ if __name__ == '__main__':
     print('PreProcessing')
 
     # Gender
-    """
     df['GENDER'] = df['GENDER'].replace(
         {
-            'Male': 1,
-            'Female': 2
+            'Unknown': np.nan,
+            'Unspecified': np.nan
         })
-    """
 
     # Ethnicity
     df['ETHNICITY'] = df['ETHNICITY'].replace(
@@ -114,9 +110,9 @@ if __name__ == '__main__':
             'Not Hispanic or Latino': 'Not Hispanic/Latino',
             'Not Hispanic, Latino/a, or Spanish Origin': 'Not Hispanic/Latino/Spanish',
             'Hispanic or Latino': 'Hispanic/Latino',
-            'Unknown': 'Unknown',
-            'Unreported/Refused to Report': 'Unknown',
-            'Declined': 'Unknown'
+            'Unknown': np.nan,
+            'Unreported/Refused to Report': np.nan,
+            'Declined': np.nan
         })
 
     # Race
@@ -141,15 +137,16 @@ if __name__ == '__main__':
             'More than one race': 'Bi-racial',
             'BI-RACIAL': 'Bi-racial',
             # Other
-            'Unknown': 'Unknown',
-            'Refused': 'Unknown',
-            'Unreported/Refused to report race': 'Unknown',
-            'Decline to Answer': 'Unknown',
+            'Unknown': np.nan,
+            'Refused': np.nan,
+            'Unreported/Refused to report race': np.nan,
+            'Decline to Answer': np.nan,
         })
 
     # Zip
     df['ZIP'] = df['ZIP'].apply(preprocessing_zip)
-    df[['ZIP5', 'ZIP4']] = df['ZIP'].apply(preprocessing_split_zip)
+    df['ZIP5'] = df['ZIP'].apply(lambda x: pd.to_numeric(x.split('-')[0]))
+    df['ZIP4'] = df['ZIP'].apply(lambda x: pd.to_numeric(x.split('-')[1]) if len(x.split('-')) > 1 else np.nan)
     df.drop('ZIP', axis='columns', inplace=True)
 
     # Handle duplicates
@@ -171,4 +168,4 @@ if __name__ == '__main__':
         'ZIP4': 'zip4'
     }, inplace=True)
     df = df.loc[:, ['id_patient', 'dob', 'gender', 'ethnicity', 'race', 'zip5', 'zip4']]
-    df.to_sql(name='patient', con=engine, if_exists='append', index=False, chunksize=1, method='multi')
+    df.to_sql(name='patient', con=engine, if_exists='append', index=False, chunksize=5000, method='multi')

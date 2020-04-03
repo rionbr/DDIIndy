@@ -11,6 +11,7 @@ import pandas as pd
 import sqlalchemy
 from sqlalchemy import event
 from utils import add_own_encoders
+import swifter
 
 
 def preprocessing_zip(x):
@@ -154,13 +155,13 @@ if __name__ == '__main__':
         })
 
     # Zip
-    df['ZIP'] = df['ZIP'].apply(preprocessing_zip)
-    df['ZIP5'] = df['ZIP'].apply(lambda x: pd.to_numeric(x.split('-')[0]))
-    df['ZIP4'] = df['ZIP'].apply(lambda x: pd.to_numeric(x.split('-')[1]) if len(x.split('-')) > 1 else np.nan)
+    df['ZIP'] = df['ZIP'].swifter.apply(preprocessing_zip)
+    df['ZIP5'] = df['ZIP'].swifter.apply(lambda x: pd.to_numeric(x.split('-')[0]))
+    df['ZIP4'] = df['ZIP'].swifter.apply(lambda x: pd.to_numeric(x.split('-')[1]) if len(x.split('-')) > 1 else np.nan)
     df.drop('ZIP', axis='columns', inplace=True)
 
     # Handle duplicates
-    df = df.groupby('STUDY_ID').apply(handle_duplicated_patients)
+    df = df.groupby('STUDY_ID').swifter.apply(handle_duplicated_patients)
     df.reset_index(drop=True, inplace=True)
 
     # DOB

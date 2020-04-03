@@ -14,6 +14,7 @@ pd.set_option('display.width', 1000)
 import sqlalchemy
 from sqlalchemy import event
 from utils import add_own_encoders
+import swifter
 
 
 def calculates_date_end(r):
@@ -89,6 +90,7 @@ if __name__ == '__main__':
             n_data.append(data)
     dfDd = pd.DataFrame.from_records(data=n_data, index=pd.Series(n_ids, name='ID_DRUG'), columns=['TOPIC', 'OPHTHALMO', 'VACCINE', 'MED_NAME'])
     dfDd = dfDd.reset_index().set_index('MED_NAME')
+    dfDd = dfDd.loc[dfDd['ID_DRUG'] != 'None', :]  # Remove ID_DRUG == 'None'
 
     print("Load Medicine Files.")
     dtype = {
@@ -119,7 +121,8 @@ if __name__ == '__main__':
     # Order Date
     dfM['ORDERING_DATE'] = pd.to_datetime(dfM['ORDERING_DATE'], format='%Y-%m-%d')
 
-    dfM['END_DATE'] = dfM[['ORDERING_DATE', 'DURATION', 'DURATIONUNIT']].apply(calculates_date_end, axis='columns')
+    # Swifter to Speed up apply
+    dfM['END_DATE'] = dfM[['ORDERING_DATE', 'DURATION', 'DURATIONUNIT']].swifter.apply(calculates_date_end, axis='columns')
 
     """
     dfM['ORDER_STATUS'] = dfM['ORDER_STATUS'].replace({

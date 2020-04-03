@@ -171,4 +171,4 @@ if __name__ == '__main__':
         'ZIP4': 'zip4'
     }, inplace=True)
     df = df.loc[:, ['id_patient', 'dob', 'gender', 'ethnicity', 'race', 'zip5', 'zip4']]
-    df.to_sql(name='patient', con=engine, if_exists='append', index=False, chunksize=1, method='multi')
+    df.to_sql(name='patient', con=engine, if_exists='append', index=False, chunksize=5000, method='multi')

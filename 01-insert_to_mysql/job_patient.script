@@ -3,7 +3,7 @@
 #PBS -l nodes=1:ppn=1,vmem=8gb,walltime=00:30:00
 #PBS -M rionbr@indiana.edu
 #PBS -m abe
-#PBS -N ddiindy-sda2rda
+#PBS -N ddiindy-patient-sda2rda
 #PBS -j oe 
 
 cd /N/u/rionbr/Carbonate/DDIIndy/01-insert_to_mysql

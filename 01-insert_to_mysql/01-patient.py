@@ -21,6 +21,10 @@ def preprocessing_zip(x):
     x = x.replace(" ", '')
     x = x.replace("-", '')
 
+    # remove zero at the begining of the string (e.g., '062390000').
+    while x.startswith('0'):
+        x = x[1:]
+
     # length < 5 ; NaN
     if len(x) < 5:
         x = ''

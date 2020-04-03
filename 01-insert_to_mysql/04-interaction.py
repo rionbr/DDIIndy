@@ -7,10 +7,13 @@
 #
 import configparser
 import pandas as pd
-import sqlalchemy
 pd.set_option('display.max_rows', 50)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
+import sqlalchemy
+from sqlalchemy import event
+from utils import add_own_encoders
+
 
 if __name__ == '__main__':
 
@@ -19,6 +22,7 @@ if __name__ == '__main__':
     cfg.read('../config.ini')
     url = 'mysql+pymysql://%(user)s:%(pass)s@%(host)s:%(port)s/%(db)s?charset=utf8' % cfg['IU-RDC-MySQL']
     engine = sqlalchemy.create_engine(url, encoding='utf-8')
+    event.listen(engine, "before_cursor_execute", add_own_encoders)
 
     # Truncate table
     print('Truncating Table')

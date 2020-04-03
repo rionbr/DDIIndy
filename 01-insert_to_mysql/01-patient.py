@@ -9,6 +9,8 @@ import configparser
 import numpy as np
 import pandas as pd
 import sqlalchemy
+from sqlalchemy import event
+from utils import add_own_encoders
 
 
 def preprocessing_zip(x):
@@ -66,7 +68,7 @@ def handle_duplicated_patients(dfg):
         zip4 = vc_zip4.index[0] if len(vc_zip4) else None
         #
         return pd.Series({
-            'STUDY_ID': int(dfg['STUDY_ID'].iloc[0]),
+            'STUDY_ID': dfg['STUDY_ID'].iloc[0],
             'DOB': dob,
             'GENDER': gender,
             'ETHNICITY': ethnicity,
@@ -85,6 +87,7 @@ if __name__ == '__main__':
     cfg.read('../config.ini')
     url = 'mysql+pymysql://%(user)s:%(pass)s@%(host)s/%(db)s?charset=utf8' % cfg['IU-RDC-MySQL']
     engine = sqlalchemy.create_engine(url, encoding='utf-8')
+    event.listen(engine, "before_cursor_execute", add_own_encoders)
 
     # Truncate table
     print('Truncating Table')
@@ -145,8 +148,8 @@ if __name__ == '__main__':
 
     # Zip
     df['ZIP'] = df['ZIP'].apply(preprocessing_zip)
-    df['ZIP5'] = df['ZIP'].apply(lambda x: pd.to_numeric(x.split('-')[0]))
-    df['ZIP4'] = df['ZIP'].apply(lambda x: pd.to_numeric(x.split('-')[1]) if len(x.split('-')) > 1 else np.nan)
+    df['ZIP5'] = df['ZIP'].apply(lambda x: int(pd.to_numeric(x.split('-')[0])))
+    df['ZIP4'] = df['ZIP'].apply(lambda x: int(pd.to_numeric(x.split('-')[1])) if len(x.split('-')) > 1 else np.nan)
     df.drop('ZIP', axis='columns', inplace=True)
 
     # Handle duplicates
@@ -168,4 +171,4 @@ if __name__ == '__main__':
         'ZIP4': 'zip4'
     }, inplace=True)
     df = df.loc[:, ['id_patient', 'dob', 'gender', 'ethnicity', 'race', 'zip5', 'zip4']]
-    df.to_sql(name='patient', con=engine, if_exists='append', index=False, chunksize=5000, method='multi')
+    df.to_sql(name='patient', con=engine, if_exists='append', index=False, chunksize=1, method='multi')

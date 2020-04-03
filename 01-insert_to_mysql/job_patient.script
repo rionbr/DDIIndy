@@ -1,0 +1,31 @@
+#!/bin/bash
+#PBS -k o
+#PBS -l nodes=1:ppn=1,vmem=8gb,walltime=00:30:00
+#PBS -M rionbr@indiana.edu
+#PBS -m abe
+#PBS -N ddiindy-sda2rda
+#PBS -j oe 
+
+cd /N/u/rionbr/Carbonate/DDIIndy/01-insert_to_mysql
+
+printf "\n> Load Python module\n"
+module load anaconda/python3.7/2019.03
+
+printf "\n> Getting MySQL key/pass from config.ini\n"
+pass=$(python << EOI
+import configparser
+c = configparser.ConfigParser()
+c.read('../config.ini')
+print(c['IU-RDC-MySQL']['pass'])
+EOI
+)
+
+printf "\n> SQL: Create Tables\n"
+mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_patient_table.sql 
+
+
+printf "\n> Processing: Patient\n"
+python 01-patient.py
+
+
+printf "\n> Done.\n"

@@ -8,6 +8,8 @@
 import configparser
 import pandas as pd
 import sqlalchemy
+from sqlalchemy import event
+from utils import add_own_encoders
 
 
 if __name__ == '__main__':
@@ -18,6 +20,7 @@ if __name__ == '__main__':
     url = 'mysql+pymysql://%(user)s:%(pass)s@%(host)s:%(port)s/%(db)s?charset=utf8' % cfg['IU-RDC-MySQL']
     engine = sqlalchemy.create_engine(url, encoding='utf-8')
     query = engine.execute("SELECT 1+1")
+    event.listen(engine, "before_cursor_execute", add_own_encoders)
 
     # Truncate table
     print('Truncating Table')

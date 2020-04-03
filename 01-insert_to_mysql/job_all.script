@@ -24,8 +24,8 @@ printf "\n> SQL: Create Tables\n"
 mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_tables.sql 
 
 
-printf "\n> Processing: Demographics\n"
-python 01-demographics.py
+printf "\n> Processing: Patients\n"
+python 01-patient.py
 
 printf "\n> Processing: NDC\n"
 python 02-ndc.py
@@ -34,7 +34,7 @@ printf "\n> Processing: Drugs\n"
 python 03-drug.py
 
 printf "\n> Processing: Interactions\n"
-python 04-interactions.py
+python 04-interaction.py
 
 printf "\n> Processing: Medications\n"
 python 05-medication.py

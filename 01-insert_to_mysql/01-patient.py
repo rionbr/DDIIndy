@@ -148,8 +148,8 @@ if __name__ == '__main__':
 
     # Zip
     df['ZIP'] = df['ZIP'].apply(preprocessing_zip)
-    df['ZIP5'] = df['ZIP'].apply(lambda x: int(pd.to_numeric(x.split('-')[0])))
-    df['ZIP4'] = df['ZIP'].apply(lambda x: int(pd.to_numeric(x.split('-')[1])) if len(x.split('-')) > 1 else np.nan)
+    df['ZIP5'] = df['ZIP'].apply(lambda x: pd.to_numeric(x.split('-')[0]))
+    df['ZIP4'] = df['ZIP'].apply(lambda x: pd.to_numeric(x.split('-')[1]) if len(x.split('-')) > 1 else np.nan)
     df.drop('ZIP', axis='columns', inplace=True)
 
     # Handle duplicates

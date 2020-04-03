@@ -133,9 +133,12 @@ if __name__ == '__main__':
             'Other Asian': 'Asian',
             # Native
             'American Indian or Alaska Native': 'Indian',
+            'NATIVE ALASKAN': 'Indian',
             # Islander
+            'Native Hawaiian': 'Islander',
             'Other Pacific Islander': 'Islander',
             'Native Hawaiian or Other Pacific Islande': 'Islander',
+            'Native Hawaiian or Other Pacific Islander': 'Islander',
             # >1 Race
             'More than one race': 'Bi-racial',
             'BI-RACIAL': 'Bi-racial',

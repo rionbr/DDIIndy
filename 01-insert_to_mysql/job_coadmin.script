@@ -1,0 +1,23 @@
+#!/bin/bash
+#PBS -k o
+#PBS -l nodes=1:ppn=1,vmem=4gb,walltime=08:00:00
+#PBS -M rionbr@indiana.edu
+#PBS -m abe
+#PBS -N ddiindy-coadmin-sda2rda
+#PBS -j oe 
+
+cd /N/u/rionbr/Carbonate/DDIIndy/01-insert_to_mysql
+
+printf "\n> Getting MySQL key/pass from config.ini\n"
+pass=$(python << EOI
+import configparser
+c = configparser.ConfigParser()
+c.read('../config.ini')
+print(c['IU-RDC-MySQL']['pass'])
+EOI
+)
+
+printf "\n> SQL: SELECT INSERT coadministration\n"
+mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_insert_coadmin.sql 
+
+printf "\n> Done.\n"

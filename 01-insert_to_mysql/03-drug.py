@@ -37,14 +37,10 @@ if __name__ == '__main__':
     # XML
     print('Loading XML(zip) File')
     if DEBUG:
-        filep = '../data/drugbank-v5.1.0/full database debug.xml'
+        filep = '../data/drugbank-v5.1.5/full database debug.xml'
         file = open(filep, 'r')
-        version = 000
-
     else:
-        zfilep = '../data/drugbank-v5.1.0/drugbank_all_full_database.xml.zip'
-        version = 510
-
+        zfilep = '../data/drugbank-v5.1.5/drugbank_all_full_database.xml.zip'
         zfile = ZipFile(zfilep, 'r')
         file = zfile.open('full database.xml')
 
@@ -58,7 +54,8 @@ if __name__ == '__main__':
     #
     # Loop all drugs
     #
-    r = []
+    d = []
+    i = []
     for drug in root:
         #
         # Drugs
@@ -91,12 +88,44 @@ if __name__ == '__main__':
             groups.append(xml_group.text)
         groups = ','.join(groups)
 
-        r.append((id_drugbank, name, dtype, dclass, dsubclass, description, groups))
+        d.append((id_drugbank, name, dtype, dclass, dsubclass, description, groups))
+
+        #
+        # Interactions
+        #
+        """
+        interactions = drug.find("ns:drug-interactions", ns)
+        for interaction in interactions:
+            id_drugbank_j = interaction.find("ns:drugbank-id", ns).text
+            id_drugbank_j_short = id_drugbank_j[2:]
+            description = interaction.find("ns:description", ns).text
+
+            # If current drug id is bigger than interacting drug, skip
+            if id_drugbank_short > id_drugbank_j_short:
+                continue
+            else:
+                i.append(id_drugbank, id_drugbank_j, description)
+        """
+
     #
-    df = pd.DataFrame(r, columns=['id_drug', 'name', 'type', 'class', 'subclass', 'description', 'groups'])
+    dfd = pd.DataFrame(d, columns=['id_drug', 'name', 'type', 'class', 'subclass', 'description', 'groups'])
+
+    #
+    # Update a few IDs to match old drugbank. These ids are secondary ids.
+    #
+    # Secretin
+    dfd.loc[(dfd['id_drug'] == 'DB09532'), 'id_drug'] = 'DB00021'
+    # Aliskiren
+    dfd.loc[(dfd['id_drug'] == 'DB09026'), 'id_drug'] = 'DB01258'
+    # Bismuth
+    dfd.loc[(dfd['id_drug'] == 'DB01294'), 'id_drug'] = 'DB01402'
+
+    # dfi = pd.DataFrame(i, columns=['id_drug_i', 'id_drug_j', 'description'])
 
     #
     # Insert to MysSQL
     #
     print('Insert to MySQL (this may take a while)')
-    df.to_sql(name='drug', con=engine, if_exists='append', index=False, chunksize=500, method='multi')
+    dfd.to_sql(name='drug', con=engine, if_exists='append', index=False, chunksize=500, method='multi')
+
+    # dfi.to_sql(name='interaction', con=engine, if_exists='append', index=False, chunksize=500, method='multi')

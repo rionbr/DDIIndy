@@ -44,3 +44,44 @@ ALTER TABLE coadministration
 	ADD CONSTRAINT fk_id_medication_drug_j FOREIGN KEY (id_medication_drug_j)
 	REFERENCES medication_drug (id_medication_drug)
 	ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+/*
+ * Select FKs 
+*/
+/*
+SELECT 
+  TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+FROM
+  INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE
+  REFERENCED_TABLE_SCHEMA = 'casci_ddi_indy' AND
+  TABLE_NAME = 'medication_drug';
+*/
+
+/*
+ * Drop FKs 
+*/
+/*
+ALTER TABLE medication DROP FOREIGN KEY `fk_id_patient`;
+ALTER TABLE medication DROP FOREIGN KEY `fk_id_catalog`;
+
+ALTER TABLE medication_drug DROP FOREIGN KEY `fk_id_medication`;
+ALTER TABLE medication_drug DROP FOREIGN KEY `fk_id_drug`;
+
+ALTER TABLE coadministration DROP FOREIGN KEY `fk_id_medication_drug_i`;
+ALTER TABLE coadministration DROP FOREIGN KEY `fk_id_medication_drug_j`;
+
+/*
+ * Discover where is the problem
+*/
+/*
+SELECT * FROM medication_drug WHERE id_drug NOT IN (SELECT DISTINCT id_drug FROM drug) LIMIT 1;
+
+SELECT id_drug, name FROM drug WHERE id_drug = 'DB01402';
+SELECT id_drug, name FROM drug WHERE name LIKE '%aliskiren%';
+
+UPDATE medication_drug SET id_drug = 'DB01258' WHERE id_drug = 'DB09026';
+DELETE FROM medication_drug WHERE id_drug = 'DB14487';
+*/
+

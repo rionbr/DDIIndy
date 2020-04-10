@@ -8,7 +8,7 @@
  * Co-Administration
 */
 INSERT INTO coadministration (id_medication_drug_i, id_medication_drug_j, length, is_ddi)
-EXPLAIN SELECT
+SELECT
     mdi.id_medication_drug AS 'medication_drug_i',
     mdj.id_medication_drug AS 'medication_drug_j',
     DATEDIFF(GREATEST(mi.dt_start, mi.dt_end), LEAST(mi.dt_start, mi.dt_end)) AS 'length',

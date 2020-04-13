@@ -25,7 +25,7 @@ def parallel_worker(data):
     if len(dfU) == 0:
         return []
     else:
-        result_user_coadmin_inter = []
+        result_records = []
         pairs = dfU['id_drug'].unique()
 
         for id_drug_i, id_drug_j in combinations(pairs, 2):
@@ -77,13 +77,18 @@ def parallel_worker(data):
             else:
                 is_ddi = False
 
-            result_user_coadmin_inter.append(
+            result_records.append(
                 [id_patient, id_drug_i, id_drug_j, qt_i, qt_j, len_i, len_j, len_ij, is_ddi]
             )
 
+        # Result DataFframe
+        dfR = pd.DataFrame(result_records, columns=['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi'])
+        # Insert to MySQL
+        dfR.to_sql(name='coadministration', con=engine, if_exists='append', index=False, chunksize=1000, method='multi')
+        # Add patien to Queue
         queue.put(id_patient)
 
-        return result_user_coadmin_inter
+        return id_patient
 
 
 if __name__ == '__main__':
@@ -96,15 +101,15 @@ if __name__ == '__main__':
     event.listen(engine, "before_cursor_execute", add_own_encoders)
 
     # Truncate table
-    print('Truncating Table')
-    Q = engine.execute("TRUNCATE TABLE coadministration")
+    #print('Truncating Table')
+    #Q = engine.execute("TRUNCATE TABLE coadministration")
 
     print('Load DB Interactions')
     sqli = "SELECT id_drug_i, id_drug_j FROM drugbank_interaction"
     dfI = pd.read_sql(sql=sqli, con=engine)
     set_of_interactions = set([frozenset((i, j)) for i, j in dfI.itertuples(index=False, name=None)])
 
-    print('Load Dispensations')
+    print('Load Dispensations (from patients not processed yet)')
     sqld = """
         SELECT
             md.id_medication_drug,
@@ -116,7 +121,10 @@ if __name__ == '__main__':
         WHERE
             m.is_topic = FALSE AND
             m.is_ophthalmo = FALSE AND
-            m.is_vaccine = FALSE
+            m.is_vaccine = FALSE AND
+            m.id_patient NOT IN (
+                SELECT co.id_patient FROM coadministration co GROUP BY co.id_patient
+            )
     """
     df = pd.read_sql(sql=sqld, con=engine)
 
@@ -142,14 +150,10 @@ if __name__ == '__main__':
             queue_size = queue.qsize()
             print('Process: {i:,d} of {total:,d} patients completed'.format(i=queue_size, total=(len(dfGList) - 1)))
             sys.stdout.flush()
-            sleep(5)
+            sleep(60)
 
-    print("Processing result records")
-    result_list = run.get()
-    result_records = [record_list for result in result_list for record_list in result]
+    #print("Processing result records")
+    #result_list = run.get()
+    #result_records = [record_list for result in result_list for record_list in result]
 
-    # Results
-    dfR = pd.DataFrame(result_records, columns=['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi'])
-
-    print('Insert to MySQL (this may take a while)')
-    dfR.to_sql(name='coadministration', con=engine, if_exists='append', index=False, chunksize=5000, method='multi')
+    print('Done.')

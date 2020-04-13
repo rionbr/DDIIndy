@@ -54,6 +54,7 @@ ALTER TABLE medication DROP FOREIGN KEY `fk_id_catalog`;
 
 ALTER TABLE medication_drug DROP FOREIGN KEY `fk_id_medication`;
 ALTER TABLE medication_drug DROP FOREIGN KEY `fk_id_drug`;
+
 /*
  * Discover where is the problem
 */

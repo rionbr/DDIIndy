@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -k o
-#PBS -l nodes=1:ppn=2,vmem=160gb,walltime=01:00:00
+#PBS -l nodes=1:ppn=2,vmem=8gb,walltime=08:00:00
 #PBS -M rionbr@indiana.edu
 #PBS -m abe
 #PBS -N ddiindy-coadmin-sda2rda
@@ -25,12 +25,12 @@ printf "\n> Processing: CoAdministrations\n"
 python 01-compute_coadmin.py
 
 
-printf "\n> SQL: Create Foreign Keys\n"
-mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_fk.sql 
+#printf "\n> SQL: Create Foreign Keys\n"
+#mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_fk.sql 
 
 
-printf "\n> SQL: Create Views\n"
-mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_view.sql 
+#printf "\n> SQL: Create Views\n"
+#mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_view.sql 
 
 
 printf "\n> Done.\n"

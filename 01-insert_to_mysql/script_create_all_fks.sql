@@ -33,20 +33,6 @@ ALTER TABLE medication_drug
 
 
 /*
- * CoAdministration
-*/
-ALTER TABLE coadministration
-	ADD CONSTRAINT fk_id_medication_drug_i FOREIGN KEY (id_medication_drug_i)
-	REFERENCES medication_drug (id_medication_drug)
-	ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE coadministration
-	ADD CONSTRAINT fk_id_medication_drug_j FOREIGN KEY (id_medication_drug_j)
-	REFERENCES medication_drug (id_medication_drug)
-	ON UPDATE CASCADE ON DELETE CASCADE;
-
-
-/*
  * Select FKs 
 */
 /*
@@ -68,10 +54,6 @@ ALTER TABLE medication DROP FOREIGN KEY `fk_id_catalog`;
 
 ALTER TABLE medication_drug DROP FOREIGN KEY `fk_id_medication`;
 ALTER TABLE medication_drug DROP FOREIGN KEY `fk_id_drug`;
-
-ALTER TABLE coadministration DROP FOREIGN KEY `fk_id_medication_drug_i`;
-ALTER TABLE coadministration DROP FOREIGN KEY `fk_id_medication_drug_j`;
-
 /*
  * Discover where is the problem
 */

@@ -21,7 +21,7 @@ EOI
 )
 
 printf "\n> SQL: Create Tables\n"
-mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_tables.sql 
+mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_table.sql 
 
 
 printf "\n> Processing: Patients\n"
@@ -41,7 +41,7 @@ python 05-medication.py
 
 
 printf "\n> SQL: Create Foreign Keys\n"
-mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_fks.sql 
+mysql -h sasrdsmp01.uits.iu.edu -u casci_rionbr -D casci_ddi_indy -p$pass < script_create_fk.sql 
 
 
 printf "\n> Done.\n"

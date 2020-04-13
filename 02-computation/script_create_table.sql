@@ -4,6 +4,11 @@
  * Description: Create CoAdministation Table
 */
 
+/*
+ * Drop Views/Tables before creation
+*/
+DROP TABLE IF EXISTS coadministration;
+
 
 /*
  * Co-Administration

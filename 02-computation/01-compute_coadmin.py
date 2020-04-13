@@ -17,7 +17,7 @@ from utils import add_own_encoders
 from itertools import combinations
 
 
-def parallel_overlap_worker(row, dfD, set_of_interactions):
+def parallel_overlap_worker(row, dfD):
     id_drug_i = row['id_drug_i']
     id_drug_j = row['id_drug_j']
     # Order Drug Names Alphabetically
@@ -65,7 +65,7 @@ def parallel_overlap_worker(row, dfD, set_of_interactions):
     return pd.Series({'qt_i': qt_i, 'qt_j': qt_j, 'len_i': len_i, 'len_j': len_j, 'len_ij': len_ij, 'is_ddi': is_ddi})
 
 
-def parallel_query_worker(id_patient, set_of_interactions):
+def parallel_query_worker(id_patient):
     # Worker engine
     worker_engine = sqlalchemy.create_engine(url, encoding='utf-8')
     event.listen(worker_engine, "before_cursor_execute", add_own_encoders)
@@ -101,14 +101,14 @@ def parallel_query_worker(id_patient, set_of_interactions):
         dfij['id_patient'] = id_patient
 
         # Calculates Overlap
-        dfO = dfij.swifter.progress_bar(enable=False).apply(parallel_overlap_worker, axis='columns', args=(dfD, set_of_interactions))
+        dfO = dfij.swifter.progress_bar(enable=False).apply(parallel_overlap_worker, axis='columns', args=(dfD, ))
 
         # Result DataFrame
         dfR = pd.concat([dfij, dfO], axis='columns', sort=False)
 
         # Insert to MySQL
-        dfR = dfR[['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi']]
-        dfR.to_sql(name='coadministration', con=worker_engine, if_exists='append', index=False, chunksize=1, method=None)
+        dfR = dfR.loc[:, ['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi']]
+        dfR.to_sql(name='coadministration', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
 
         worker_engine.dispose()
         return len(dfR)
@@ -132,14 +132,14 @@ if __name__ == '__main__':
     #print('Truncating Table')
     #Q = engine.execute("TRUNCATE TABLE coadministration")
 
-
+    print('Load Patient IDs')
     sqlp = """
         SELECT
             p.id_patient
         FROM patient p
         WHERE
             p.id_patient NOT IN (
-                SELECT co.id_patient FROM coadministration co GROUP BY co.id_patient
+                SELECT DISTINCT co.id_patient FROM coadministration co GROUP BY co.id_patient
             )
     """
     dfP = pd.read_sql(sql=sqlp, con=engine)
@@ -147,6 +147,7 @@ if __name__ == '__main__':
     #
     # Swifter
     #
-    dfP['qt_coadmin'] = dfP['id_patient'].swifter.progress_bar(enable=True, desc="\nPatients").set_dask_scheduler(scheduler="threads").apply(parallel_query_worker, args=(set_of_interactions,))
+    print('MultiProcessing Query & Calculate')
+    dfP['qt_coadmin'] = dfP['id_patient'].swifter.progress_bar(enable=True, desc="\nPatients").set_dask_scheduler(scheduler="threads").apply(parallel_query_worker)
 
     print('Done.')

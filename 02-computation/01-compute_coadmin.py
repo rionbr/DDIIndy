@@ -17,7 +17,7 @@ from utils import add_own_encoders
 from itertools import combinations
 
 
-def parallel_overlap_worker(row, dfD):
+def parallel_overlap_worker(row, dfD, set_of_interactions):
     id_drug_i = row['id_drug_i']
     id_drug_j = row['id_drug_j']
     # Order Drug Names Alphabetically
@@ -65,7 +65,7 @@ def parallel_overlap_worker(row, dfD):
     return pd.Series({'qt_i': qt_i, 'qt_j': qt_j, 'len_i': len_i, 'len_j': len_j, 'len_ij': len_ij, 'is_ddi': is_ddi})
 
 
-def parallel_query_worker(id_patient):
+def parallel_query_worker(id_patient, set_of_interactions):
     # Worker engine
     worker_engine = sqlalchemy.create_engine(url, encoding='utf-8')
     event.listen(worker_engine, "before_cursor_execute", add_own_encoders)
@@ -89,6 +89,7 @@ def parallel_query_worker(id_patient):
 
     # Return earlier if no dispensation for this patient
     if len(dfD) == 0:
+        worker_engine.dispose()
         return 0
     else:
 
@@ -98,15 +99,18 @@ def parallel_query_worker(id_patient):
         pairs_drugs = combinations(unique_drugs, 2)
         dfij = pd.DataFrame(pairs_drugs, columns=['id_drug_i', 'id_drug_j'])
         dfij['id_patient'] = id_patient
+
         # Calculates Overlap
-        dfO = dfij.swifter.progress_bar(enable=False).apply(parallel_overlap_worker, axis='columns', args=(dfD, ))
+        dfO = dfij.swifter.progress_bar(enable=False).apply(parallel_overlap_worker, axis='columns', args=(dfD, set_of_interactions))
 
         # Result DataFrame
         dfR = pd.concat([dfij, dfO], axis='columns', sort=False)
 
         # Insert to MySQL
-        dfR.to_sql(name='coadministration', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
+        dfR = dfR[['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi']]
+        dfR.to_sql(name='coadministration', con=worker_engine, if_exists='append', index=False, chunksize=1, method=None)
 
+        worker_engine.dispose()
         return len(dfR)
 
 
@@ -119,14 +123,15 @@ if __name__ == '__main__':
     engine = sqlalchemy.create_engine(url, encoding='utf-8')
     event.listen(engine, "before_cursor_execute", add_own_encoders)
 
-    # Truncate table
-    # print('Truncating Table')
-    # Q = engine.execute("TRUNCATE TABLE coadministration")
-
     print('Load DB Interactions')
     sqli = "SELECT id_drug_i, id_drug_j FROM drugbank_interaction"
     dfI = pd.read_sql(sql=sqli, con=engine)
     set_of_interactions = set([frozenset((i, j)) for i, j in dfI.itertuples(index=False, name=None)])
+
+    # Truncate table
+    #print('Truncating Table')
+    #Q = engine.execute("TRUNCATE TABLE coadministration")
+
 
     sqlp = """
         SELECT
@@ -136,13 +141,12 @@ if __name__ == '__main__':
             p.id_patient NOT IN (
                 SELECT co.id_patient FROM coadministration co GROUP BY co.id_patient
             )
-        LIMIT 500
     """
     dfP = pd.read_sql(sql=sqlp, con=engine)
 
     #
     # Swifter
     #
-    dfP['qt_coadmin'] = dfP['id_patient'].swifter.set_dask_scheduler(scheduler="threads").apply(parallel_query_worker)
+    dfP['qt_coadmin'] = dfP['id_patient'].swifter.progress_bar(enable=True, desc="\nPatients").set_dask_scheduler(scheduler="threads").apply(parallel_query_worker, args=(set_of_interactions,))
 
     print('Done.')

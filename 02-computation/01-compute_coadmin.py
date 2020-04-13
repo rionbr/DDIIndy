@@ -96,8 +96,8 @@ if __name__ == '__main__':
     event.listen(engine, "before_cursor_execute", add_own_encoders)
 
     # Truncate table
-    #print('Truncating Table')
-    #Q = engine.execute("TRUNCATE TABLE coadministration")
+    print('Truncating Table')
+    Q = engine.execute("TRUNCATE TABLE coadministration")
 
     print('Load DB Interactions')
     sqli = "SELECT id_drug_i, id_drug_j FROM drugbank_interaction"
@@ -117,7 +117,6 @@ if __name__ == '__main__':
             m.is_topic = FALSE AND
             m.is_ophthalmo = FALSE AND
             m.is_vaccine = FALSE
-        LIMIT 1000
     """
     df = pd.read_sql(sql=sqld, con=engine)
 
@@ -153,4 +152,4 @@ if __name__ == '__main__':
     dfR = pd.DataFrame(result_records, columns=['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi'])
 
     print('Insert to MySQL (this may take a while)')
-    #dfR.to_sql(name='coadministration', con=engine, if_exists='append', index=False, chunksize=1, method='multi')
+    dfR.to_sql(name='coadministration', con=engine, if_exists='append', index=False, chunksize=5000, method='multi')

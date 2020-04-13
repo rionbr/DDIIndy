@@ -22,28 +22,28 @@ def calculates_date_end(r):
     duration = r['DURATION']
     unit = r['DURATIONUNIT']
 
-    # If no duration, assume one single day of treatment
+    # If no duration, assume same day treatment
     if pd.isnull(duration) or pd.isnull(unit):
-        return start + pd.Timedelta(value=1, unit='day')
-
-    if unit == 'Minutes':
-        timedelta = pd.Timedelta(value=duration, unit='minutes')
-    elif unit == 'Hours':
-        timedelta = pd.Timedelta(value=duration, unit='hours')
-    elif unit == 'Days':
-        timedelta = pd.Timedelta(value=duration, unit='days')
-    elif unit == 'Weeks':
-        timedelta = pd.Timedelta(value=duration * 7, unit='days')
-    elif unit == 'Months':
-        timedelta = pd.Timedelta(value=duration * 30, unit='days')
-    ##
-    elif unit == 'Treatments':
+        return start
+    else:
+        if unit == 'Minutes':
+            timedelta = pd.Timedelta(value=duration, unit='minutes')
+        elif unit == 'Hours':
+            timedelta = pd.Timedelta(value=duration, unit='hours')
+        elif unit == 'Days':
             timedelta = pd.Timedelta(value=duration, unit='days')
-    elif unit == 'Doses':
-            timedelta = pd.Timedelta(value=duration, unit='days')
-    elif unit == 'Times':
-            timedelta = pd.Timedelta(value=duration, unit='days')
-    #
+        elif unit == 'Weeks':
+            timedelta = pd.Timedelta(value=duration * 7, unit='days')
+        elif unit == 'Months':
+            timedelta = pd.Timedelta(value=duration * 30, unit='days')
+        ##
+        elif unit == 'Treatments':
+                timedelta = pd.Timedelta(value=duration, unit='days')
+        elif unit == 'Doses':
+                timedelta = pd.Timedelta(value=duration, unit='days')
+        elif unit == 'Times':
+                timedelta = pd.Timedelta(value=duration, unit='days')
+        #
     return start + timedelta
 
 

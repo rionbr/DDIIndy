@@ -179,7 +179,7 @@ if __name__ == '__main__':
         else:
             size = queue_completed.qsize()
             print("Process: {i:,d} of {n:,d} completed".format(i=size, n=n_tasks))
-            sleep(1)
+            sleep(60)
 
     result_list = run.get()
 

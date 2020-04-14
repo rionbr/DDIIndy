@@ -15,6 +15,13 @@ import sqlalchemy
 from sqlalchemy import event
 from utils import add_own_encoders
 from itertools import combinations
+from time import sleep
+from multiprocessing import Pool, Manager, cpu_count
+
+
+url = ''
+set_of_interactions = set()
+worker_data = []
 
 
 def parallel_overlap_worker(row, dfD):
@@ -65,7 +72,8 @@ def parallel_overlap_worker(row, dfD):
     return pd.Series({'qt_i': qt_i, 'qt_j': qt_j, 'len_i': len_i, 'len_j': len_j, 'len_ij': len_ij, 'is_ddi': is_ddi})
 
 
-def parallel_query_worker(id_patient):
+def parallel_query_worker(data):
+    id_patient, queue_completed = data
     # Worker engine
     worker_engine = sqlalchemy.create_engine(url, encoding='utf-8')
     event.listen(worker_engine, "before_cursor_execute", add_own_encoders)
@@ -111,6 +119,7 @@ def parallel_query_worker(id_patient):
         dfR.to_sql(name='coadministration', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
 
         worker_engine.dispose()
+        queue_completed.put(id_patient)
         return len(dfR)
 
 
@@ -147,7 +156,31 @@ if __name__ == '__main__':
     #
     # Swifter
     #
-    print('MultiProcessing Query & Calculate')
-    dfP['qt_coadmin'] = dfP['id_patient'].swifter.progress_bar(enable=True, desc="\nPatients").set_dask_scheduler(scheduler="threads").apply(parallel_query_worker)
+    #print('MultiProcessing Query & Calculate')
+    #dfP['qt_coadmin'] = dfP['id_patient'].swifter.progress_bar(enable=True, desc="\nPatients").set_dask_scheduler(scheduler="threads").apply(parallel_query_worker)
+
+    #
+    # MultiProcessing
+    #
+    n_cpu = cpu_count()
+    print('Starting Multiprocess (#cpu: %d)' % (n_cpu))
+    pool = Pool(n_cpu)
+    n_tasks = dfP.shape[0]
+    manager = Manager()
+    queue_completed = manager.Queue()
+
+    worker_data = [(id_patient, queue_completed) for id_patient in dfP['id_patient'].tolist()]
+
+    run = pool.map_async(parallel_query_worker, worker_data)
+
+    while True:
+        if run.ready():
+            break
+        else:
+            size = queue_completed.qsize()
+            print("Process: {i:,d} of {n:,d} completed".format(i=size, n=n_tasks))
+            sleep(1)
+
+    result_list = run.get()
 
     print('Done.')

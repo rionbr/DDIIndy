@@ -16,7 +16,8 @@ from sqlalchemy import event
 from utils import add_own_encoders
 from itertools import combinations
 from time import sleep
-from multiprocessing import Pool, Manager, cpu_count
+from datetime import datetime
+import multiprocessing as mp
 
 
 url = ''
@@ -73,7 +74,8 @@ def parallel_overlap_worker(row, dfD):
 
 
 def parallel_query_worker(data):
-    id_patient, queue_completed = data
+    id_patient, queue = data
+    dt_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # Worker engine
     worker_engine = sqlalchemy.create_engine(url, encoding='utf-8')
     event.listen(worker_engine, "before_cursor_execute", add_own_encoders)
@@ -97,7 +99,14 @@ def parallel_query_worker(data):
 
     # Return earlier if no dispensation for this patient
     if len(dfD) == 0:
+        # Add Parsed Patient
+        dt_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        sql = "INSERT INTO helper_patient_parsed (id_patient, dt_start, dt_end) VALUES ({id_patient:d}, '{dt_start:s}', '{dt_end:s}')".\
+            format(id_patient=id_patient, dt_start=dt_start, dt_end=dt_end)
+        worker_engine.execute(sql)
         worker_engine.dispose()
+        # Queue
+        queue.put(id_patient)
         return 0
     else:
 
@@ -118,8 +127,14 @@ def parallel_query_worker(data):
         dfR = dfR.loc[:, ['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi']]
         dfR.to_sql(name='coadministration', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
 
+        # Add Parsed Patient
+        dt_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        sql = "INSERT INTO helper_patient_parsed (id_patient, dt_start, dt_end) VALUES ({id_patient:d}, '{dt_start:s}', '{dt_end:s}')".\
+            format(id_patient=id_patient, dt_start=dt_start, dt_end=dt_end)
+        worker_engine.execute(sql)
         worker_engine.dispose()
-        queue_completed.put(id_patient)
+        # Queue
+        queue.put(id_patient)
         return len(dfR)
 
 
@@ -138,8 +153,9 @@ if __name__ == '__main__':
     set_of_interactions = set([frozenset((i, j)) for i, j in dfI.itertuples(index=False, name=None)])
 
     # Truncate table
-    #print('Truncating Table')
-    #Q = engine.execute("TRUNCATE TABLE coadministration")
+    # print('Truncating Table')
+    # Q = engine.execute("TRUNCATE TABLE coadministration")
+    # Q = engine.execute("TRUNCATE TABLE helper_patient_parsed")
 
     print('Load Patient IDs')
     sqlp = """
@@ -148,28 +164,24 @@ if __name__ == '__main__':
         FROM patient p
         WHERE
             p.id_patient NOT IN (
-                SELECT DISTINCT co.id_patient FROM coadministration co GROUP BY co.id_patient
+                SELECT DISTINCT hp.id_patient FROM helper_patient_parsed hp
             )
+        LIMIT 100000
     """
     dfP = pd.read_sql(sql=sqlp, con=engine)
 
     #
-    # Swifter
-    #
-    #print('MultiProcessing Query & Calculate')
-    #dfP['qt_coadmin'] = dfP['id_patient'].swifter.progress_bar(enable=True, desc="\nPatients").set_dask_scheduler(scheduler="threads").apply(parallel_query_worker)
-
-    #
     # MultiProcessing
     #
-    n_cpu = cpu_count()
+    n_cpu = mp.cpu_count()
     print('Starting Multiprocess (#cpu: %d)' % (n_cpu))
-    pool = Pool(n_cpu)
     n_tasks = dfP.shape[0]
-    manager = Manager()
-    queue_completed = manager.Queue()
+    pool = mp.Pool(n_cpu)
+    manager = mp.Manager()
+    queue = manager.Queue()
 
-    worker_data = [(id_patient, queue_completed) for id_patient in dfP['id_patient'].tolist()]
+    # Worker Data
+    worker_data = [(id_patient, queue) for id_patient in dfP['id_patient'].tolist()]
 
     run = pool.map_async(parallel_query_worker, worker_data)
 
@@ -177,10 +189,13 @@ if __name__ == '__main__':
         if run.ready():
             break
         else:
-            size = queue_completed.qsize()
+            size = queue.qsize()
             print("Process: {i:,d} of {n:,d} completed".format(i=size, n=n_tasks))
             sleep(60)
 
     result_list = run.get()
+
+    pool.close()
+    pool.join()
 
     print('Done.')

@@ -8,7 +8,7 @@
  * Drop Views/Tables before creation
 */
 DROP TABLE IF EXISTS coadministration;
-
+DROP TABLE IF EXISTS helper_patient_parsed;
 
 /*
  * Co-Administration
@@ -25,3 +25,18 @@ CREATE TABLE coadministration (
 	is_ddi BOOLEAN DEFAULT FALSE,
 	PRIMARY KEY (id_patient, id_drug_i, id_drug_j)
 ) ENGINE=InnoDB;
+
+/*
+ * helper_coadmin_parsed
+*/
+CREATE TABLE helper_patient_parsed (
+	id_patient INT,
+	dt_start DATETIME(2),
+	dt_end DATETIME(2),
+	PRIMARY KEY (id_patient)
+) ENGINE=InnoDB;
+
+/*
+SELECT id_patient, TIMEDIFF(dt_end, dt_start) as tmcalc FROM helper_patient_parsed;
+SELECT id_patient, TIMEDIFF(dt_end, dt_start) AS tmcalc FROM helper_patient_parsed ORDER BY tmcalc DESC;
+*/

@@ -1,6 +1,7 @@
 # User Defined
 config.ini
 data/
+03-geo_analysis/data/
 *.DS_Store
 
 # Byte-compiled / optimized / DLL files

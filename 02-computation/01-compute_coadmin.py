@@ -98,7 +98,7 @@ def parallel_query_worker(data):
     dfD = pd.read_sql(sql=sqld, con=worker_engine)
 
     # Return earlier if no dispensation for this patient
-    if len(dfD) == 0:
+    if len(dfD) <= 1:
         # Add Parsed Patient
         dt_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         sql = "INSERT INTO helper_patient_parsed (id_patient, dt_start, dt_end) VALUES ({id_patient:d}, '{dt_start:s}', '{dt_end:s}')".\
@@ -111,9 +111,11 @@ def parallel_query_worker(data):
     else:
 
         unique_drugs = dfD['id_drug'].unique().tolist()
-
         # Combination ij
         pairs_drugs = combinations(unique_drugs, 2)
+        # id_i < id_j
+        pairs_drugs = [(id_drug_i, id_drug_j) if (id_drug_i < id_drug_j) else (id_drug_j, id_drug_i) for id_drug_i, id_drug_j in pairs_drugs]
+        # to DataFrame
         dfij = pd.DataFrame(pairs_drugs, columns=['id_drug_i', 'id_drug_j'])
         dfij['id_patient'] = id_patient
 
@@ -166,7 +168,6 @@ if __name__ == '__main__':
             p.id_patient NOT IN (
                 SELECT DISTINCT hp.id_patient FROM helper_patient_parsed hp
             )
-        LIMIT 100000
     """
     dfP = pd.read_sql(sql=sqlp, con=engine)
 

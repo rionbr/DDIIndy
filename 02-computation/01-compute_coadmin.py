@@ -158,8 +158,8 @@ if __name__ == '__main__':
     # print('Truncating Table')
     # Q = engine.execute("TRUNCATE TABLE coadministration")
     # Q = engine.execute("TRUNCATE TABLE helper_patient_parsed")
-    for i in range(10):
-        print('Load Patient IDs - loop {i:d}'.format(i))
+    for loop in range(10):
+        print('Load Patient IDs - loop {loop:d}'.format(loop=loop))
         sqlp = """
             SELECT
                 p.id_patient

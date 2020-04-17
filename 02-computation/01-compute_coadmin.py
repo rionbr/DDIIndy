@@ -158,45 +158,47 @@ if __name__ == '__main__':
     # print('Truncating Table')
     # Q = engine.execute("TRUNCATE TABLE coadministration")
     # Q = engine.execute("TRUNCATE TABLE helper_patient_parsed")
+    for i in range(10):
+        print('Load Patient IDs - loop {i:d}'.format(i))
+        sqlp = """
+            SELECT
+                p.id_patient
+            FROM patient p
+            WHERE
+                p.id_patient NOT IN (
+                    SELECT DISTINCT hp.id_patient FROM helper_patient_parsed hp
+                )
+            LIMIT 50000
+        """
+        dfP = pd.read_sql(sql=sqlp, con=engine)
 
-    print('Load Patient IDs')
-    sqlp = """
-        SELECT
-            p.id_patient
-        FROM patient p
-        WHERE
-            p.id_patient NOT IN (
-                SELECT DISTINCT hp.id_patient FROM helper_patient_parsed hp
-            )
-    """
-    dfP = pd.read_sql(sql=sqlp, con=engine)
+        if len(dfP):
+            #
+            # MultiProcessing
+            #
+            n_cpu = mp.cpu_count()
+            print('Starting Multiprocess (#cpu: %d)' % (n_cpu))
+            n_tasks = dfP.shape[0]
+            pool = mp.Pool(n_cpu)
+            manager = mp.Manager()
+            queue = manager.Queue()
 
-    #
-    # MultiProcessing
-    #
-    n_cpu = mp.cpu_count()
-    print('Starting Multiprocess (#cpu: %d)' % (n_cpu))
-    n_tasks = dfP.shape[0]
-    pool = mp.Pool(n_cpu)
-    manager = mp.Manager()
-    queue = manager.Queue()
+            # Worker Data
+            worker_data = [(id_patient, queue) for id_patient in dfP['id_patient'].tolist()]
 
-    # Worker Data
-    worker_data = [(id_patient, queue) for id_patient in dfP['id_patient'].tolist()]
+            run = pool.map_async(parallel_query_worker, worker_data)
 
-    run = pool.map_async(parallel_query_worker, worker_data)
+            while True:
+                if run.ready():
+                    break
+                else:
+                    size = queue.qsize()
+                    print("Process: {i:,d} of {n:,d} completed".format(i=size, n=n_tasks))
+                    sleep(60)
 
-    while True:
-        if run.ready():
-            break
-        else:
-            size = queue.qsize()
-            print("Process: {i:,d} of {n:,d} completed".format(i=size, n=n_tasks))
-            sleep(60)
+            result_list = run.get()
 
-    result_list = run.get()
-
-    pool.close()
-    pool.join()
+            pool.close()
+            pool.join()
 
     print('Done.')

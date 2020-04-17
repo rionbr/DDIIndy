@@ -27,6 +27,7 @@ ALTER TABLE coadministration
  * Drop FKs 
 */
 /*
+ALTER TABLE coadministration DROP FOREIGN KEY `fk_id_patient`;
 ALTER TABLE coadministration DROP FOREIGN KEY `fk_id_drug_i`;
 ALTER TABLE coadministration DROP FOREIGN KEY `fk_id_drug_j`;
 

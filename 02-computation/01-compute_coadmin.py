@@ -126,8 +126,9 @@ def parallel_query_worker(data):
         dfR = pd.concat([dfij, dfO], axis='columns', sort=False)
 
         # Insert to MySQL
-        dfR = dfR.loc[:, ['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi']]
-        dfR.to_sql(name='coadministration', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
+        if len(dfR):
+            dfR = dfR.loc[:, ['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi']]
+            dfR.to_sql(name='coadministration', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
 
         # Add Parsed Patient
         dt_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -158,7 +159,7 @@ if __name__ == '__main__':
     # print('Truncating Table')
     # Q = engine.execute("TRUNCATE TABLE coadministration")
     # Q = engine.execute("TRUNCATE TABLE helper_patient_parsed")
-    for loop in range(10):
+    for loop in range(25):
         print('Load Patient IDs - loop {loop:d}'.format(loop=loop))
         sqlp = """
             SELECT

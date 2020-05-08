@@ -146,7 +146,7 @@ if __name__ == '__main__':
             dfpts['zip4'] = dfpts['zip4'].fillna(value=0).astype(int)
 
             # Compute interactions from random prescription
-            dfpts['n_inter'] = dfpts.swifter.apply(apply_null_model_interactions, args=(set_available_drugs, set_interactions), axis='columns')
+            dfpts['n_inter'] = dfpts.swifter.progress_bar(False).apply(apply_null_model_interactions, args=(set_available_drugs, set_interactions), axis='columns')
 
             # Variables to groupby
             dfpts['age_group'] = age_group

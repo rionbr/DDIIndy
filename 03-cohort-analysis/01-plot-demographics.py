@@ -19,6 +19,7 @@ from matplotlib import cm
 from matplotlib.colors import to_hex
 from matplotlib.colors import LinearSegmentedColormap
 
+
 if __name__ == '__main__':
 
     # DB
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     dfe['%'] = dfe['count'] / dfe['count'].sum()
     # Color
     dfe['color'] = ['#ffbb78', '#c49c94', '#98df8a', '#c7c7c7']
-    
+
     # Race
     sqlr = """
         SELECT
@@ -129,10 +130,10 @@ if __name__ == '__main__':
     dfr['%'] = dfr['count'] / dfr['count'].sum()
     # Color
     dfr['color'] = ['#ff7f0e', '#8c564b', '#e377c2', '#17becf', '#c7c7c7']
+
     #
     # Plot
     #
-
     fig, ax = plt.subplots(figsize=(7, 2.5), nrows=1, ncols=1)
     ax.set_title('Patient Demographics')
 
@@ -192,7 +193,6 @@ if __name__ == '__main__':
                 )
         else:
             ax.text(tx, ty, race, ha='center', va='center', rotation=90)
-        
 
         #
         cum_percent += percent
@@ -223,14 +223,14 @@ if __name__ == '__main__':
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels)
 
-    yticks = np.array([0, 1, 2])# + (width / 2)
+    yticks = np.array([0, 1, 2]). # + (width / 2)
     ax.set_yticks(yticks)
     ax.set_yticklabels(['Race', 'Age', 'Gender'])
 
     ax.set_xlim(0, 1)
     ax.set_ylim(-0.5, 2.5)
 
-
+    # Save
     plt.subplots_adjust(left=0.10, right=0.97, bottom=0.20, top=0.88, wspace=0, hspace=0)
     wIMGfile = 'images/img-demographics.pdf'
     ensurePathExists(wIMGfile)

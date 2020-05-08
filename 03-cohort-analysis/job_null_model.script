@@ -1,0 +1,25 @@
+#!/bin/bash
+#PBS -k o
+#PBS -l nodes=1:ppn=6,vmem=16gb,walltime=01:00:00
+#PBS -M rionbr@indiana.edu
+#PBS -m abe
+#PBS -N ddiindy-null
+#PBS -j oe 
+
+cd /N/u/rionbr/Carbonate/DDIIndy/03-cohort-analysis
+
+printf "\n> Getting MySQL key/pass from config.ini\n"
+pass=$(python << EOI
+import configparser
+c = configparser.ConfigParser()
+c.read('../config.ini')
+print(c['IU-RDC-MySQL']['pass'])
+EOI
+)
+
+
+printf "\n> Processing: Null Model\n"
+python 04-calc-null-model.py
+
+
+printf "\n> Done.\n"

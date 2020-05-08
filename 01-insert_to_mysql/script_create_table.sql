@@ -105,7 +105,5 @@ CREATE TABLE drugbank_interaction (
 	id_drug_j VARCHAR(7),
 	description TEXT,
 	severity VARCHAR(15),
-	PRIMARY KEY (id_drug_i, id_drug_j),
-	INDEX (id_drug_i),
-	INDEX (id_drug_j)
+	PRIMARY KEY (id_drug_i, id_drug_j)
 ) ENGINE=InnoDB;

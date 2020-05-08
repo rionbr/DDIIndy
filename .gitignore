@@ -2,6 +2,7 @@
 config.ini
 data/
 03-geo_analysis/data/
+*.pdf
 *.DS_Store
 
 # Byte-compiled / optimized / DLL files

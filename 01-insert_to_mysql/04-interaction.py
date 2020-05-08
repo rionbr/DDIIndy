@@ -40,6 +40,46 @@ if __name__ == '__main__':
 
     dfI[['id_drug_i', 'id_drug_j']] = dfI['label'].apply(split_drugbank_ids)
     dfI.drop('label', axis='columns', inplace=True)
+
+
+    #
+    # Update a few IDs to match old drugbank. These ids are secondary ids.
+    #
+    # Rauwolfia serpentina root
+    dfI.loc[(dfI['id_drug_i'] == 'DB00386'), 'id_drug_i'] = 'DB09363'
+    dfI.loc[(dfI['id_drug_j'] == 'DB00386'), 'id_drug_j'] = 'DB09363'
+    # Valproic Acid
+    dfI.loc[(dfI['id_drug_i'] == 'DB00510'), 'id_drug_i'] = 'DB00313'
+    dfI.loc[(dfI['id_drug_j'] == 'DB00510'), 'id_drug_j'] = 'DB00313'
+    # Ergoloid mesylate
+    dfI.loc[(dfI['id_drug_i'] == 'DB01287'), 'id_drug_i'] = 'DB01049'
+    dfI.loc[(dfI['id_drug_j'] == 'DB01287'), 'id_drug_j'] = 'DB01049'
+    # Bismuth
+    dfI.loc[(dfI['id_drug_i'] == 'DB01294'), 'id_drug_i'] = 'DB01402'
+    dfI.loc[(dfI['id_drug_j'] == 'DB01294'), 'id_drug_j'] = 'DB01402'
+    # Insulin glargine
+    dfI.loc[(dfI['id_drug_i'] == 'DB01308'), 'id_drug_i'] = 'DB00047'
+    dfI.loc[(dfI['id_drug_j'] == 'DB01308'), 'id_drug_j'] = 'DB00047'
+    # Insulin lispro
+    dfI.loc[(dfI['id_drug_i'] == 'DB01310'), 'id_drug_i'] = 'DB00046'
+    dfI.loc[(dfI['id_drug_j'] == 'DB01310'), 'id_drug_j'] = 'DB00046'
+    # Doxacurium
+    dfI.loc[(dfI['id_drug_i'] == 'DB01334'), 'id_drug_i'] = 'DB01135'
+    dfI.loc[(dfI['id_drug_j'] == 'DB01334'), 'id_drug_j'] = 'DB01135'
+    # Troleandomycin
+    dfI.loc[(dfI['id_drug_i'] == 'DB01361'), 'id_drug_i'] = 'DB13179'
+    dfI.loc[(dfI['id_drug_j'] == 'DB01361'), 'id_drug_j'] = 'DB13179'
+    # Salicylic acid
+    dfI.loc[(dfI['id_drug_i'] == 'DB01398'), 'id_drug_i'] = 'DB00936'
+    dfI.loc[(dfI['id_drug_j'] == 'DB01398'), 'id_drug_j'] = 'DB00936'
+    # Belladona
+    dfI.loc[(dfI['id_drug_i'] == 'DB01617'), 'id_drug_i'] = 'DB13913'
+    dfI.loc[(dfI['id_drug_j'] == 'DB01617'), 'id_drug_j'] = 'DB13913'
+    # Ribavirin
+    dfI.loc[(dfI['id_drug_i'] == 'DB01693'), 'id_drug_i'] = 'DB00811'
+    dfI.loc[(dfI['id_drug_j'] == 'DB01693'), 'id_drug_j'] = 'DB00811'
+
+    #
     dfI.set_index(['id_drug_i', 'id_drug_j'], inplace=True)
     dfI = dfI.loc[~dfI.index.duplicated(keep='first'), :]
 

@@ -8,12 +8,12 @@
  * Medication
 */
 ALTER TABLE medication
-	ADD CONSTRAINT fk_id_patient FOREIGN KEY (id_patient)
+	ADD CONSTRAINT fk_medication_id_patient FOREIGN KEY (id_patient)
 	REFERENCES patient (id_patient)
 	ON UPDATE CASCADE ON DELETE CASCADE;
 	
 ALTER TABLE medication
-	ADD CONSTRAINT fk_id_catalog FOREIGN KEy (id_catalog)
+	ADD CONSTRAINT fk_medication_id_catalog FOREIGN KEy (id_catalog)
 	REFERENCES ndc (id_catalog)
 	ON UPDATE CASCADE ON DELETE CASCADE;
 
@@ -22,15 +22,28 @@ ALTER TABLE medication
  * Medication <-> Drug
 */
 ALTER TABLE medication_drug
-	ADD CONSTRAINT fk_id_medication FOREIGN KEY (id_medication)
+	ADD CONSTRAINT fk_medication_drug_id_medication FOREIGN KEY (id_medication)
 	REFERENCES medication (id_medication)
 	ON UPDATE CASCADE ON DELETE RESTRICT;
 
 ALTER TABLE medication_drug
-	ADD CONSTRAINT fk_id_drug FOREIGN KEY (id_drug)
+	ADD CONSTRAINT fk_medication_drug_id_drug FOREIGN KEY (id_drug)
 	REFERENCES drug (id_drug)
 	ON UPDATE CASCADE ON DELETE RESTRICT;
 
+
+/*
+ * DrugBank Interaction
+*/
+ALTER TABLE drugbank_interaction
+	ADD CONSTRAINT fk_db_interaction_id_drug_i FOREIGN KEY (id_drug_i)
+	REFERENCES drug (id_drug)
+	ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE drugbank_interaction
+	ADD CONSTRAINT fk_db_interaction_id_drug_j FOREIGN KEY (id_drug_j)
+	REFERENCES drug (id_drug)
+	ON UPDATE CASCADE ON DELETE CASCADE;
 
 /*
  * Select FKs 
@@ -49,11 +62,14 @@ WHERE
  * Drop FKs 
 */
 /*
-ALTER TABLE medication DROP FOREIGN KEY `fk_id_patient`;
-ALTER TABLE medication DROP FOREIGN KEY `fk_id_catalog`;
+ALTER TABLE medication DROP FOREIGN KEY `fk_medication_id_patient`;
+ALTER TABLE medication DROP FOREIGN KEY `fk_medication_id_catalog`;
 
-ALTER TABLE medication_drug DROP FOREIGN KEY `fk_id_medication`;
-ALTER TABLE medication_drug DROP FOREIGN KEY `fk_id_drug`;
+ALTER TABLE medication_drug DROP FOREIGN KEY `fk_medication_drug_id_medication`;
+ALTER TABLE medication_drug DROP FOREIGN KEY `fk_medication_drug_id_drug`;
+
+ALTER TABLE drugbank_interaction DROP FOREIGN KEY `fk_db_interaction_id_drug_i`;
+ALTER TABLE drugbank_interaction DROP FOREIGN KEY `fk_db_interaction_id_drug_j`;
 
 /*
  * Discover where is the problem
@@ -68,3 +84,4 @@ UPDATE medication_drug SET id_drug = 'DB01258' WHERE id_drug = 'DB09026';
 DELETE FROM medication_drug WHERE id_drug = 'DB14487';
 */
 
+SELECT * FROM drugbank_interaction WHERE id_drug_i NOT IN (SELECT id_drug FROM drug)

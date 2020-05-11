@@ -170,4 +170,6 @@ if __name__ == '__main__':
 
     # Export
     print("Exporting")
-    dfR.to_csv('results/age_gender_race_zip_null_model.csv.gz')
+    wCSVfile = 'results/age_gender_race_zip_null_model.csv.gz'
+    ensurePathExists(wCSVfile)
+    dfR.to_csv(wCSVfile)

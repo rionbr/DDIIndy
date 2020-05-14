@@ -44,13 +44,13 @@ def parallel_overlap_worker(row, dfD):
     dfMi = pd.DataFrame.from_dict(
         {
             'i-%s' % i: {
-                t: 1 for t in pd.date_range(r['dt_start'], r['dt_end']).tolist()
+                t: True for t in pd.date_range(r['dt_start'], r['dt_end']).tolist()
             } for i, r in dfi.iterrows()
         }).sum(axis=1).rename(id_drug_i)
     dfMj = pd.DataFrame.from_dict(
         {
             'j-%s' % i: {
-                t: 1 for t in pd.date_range(r['dt_start'], r['dt_end']).tolist()
+                t: True for t in pd.date_range(r['dt_start'], r['dt_end']).tolist()
             } for i, r in dfj.iterrows()
         }).sum(axis=1).rename(id_drug_j)
 
@@ -121,6 +121,9 @@ def parallel_query_worker(data):
 
         # Calculates Overlap
         dfO = dfij.swifter.progress_bar(enable=False).apply(parallel_overlap_worker, axis='columns', args=(dfD, ))
+
+        # Only Keep results that contain at least one co-administration
+        dfO = dfO.loc[dfO['len_ij'] > 0, :]
 
         # Result DataFrame
         dfR = pd.concat([dfij, dfO], axis='columns', sort=False)

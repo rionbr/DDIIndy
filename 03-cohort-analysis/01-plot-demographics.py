@@ -129,7 +129,7 @@ if __name__ == '__main__':
     # %
     dfr['%'] = dfr['count'] / dfr['count'].sum()
     # Color
-    dfr['color'] = ['#ff7f0e', '#8c564b', '#e377c2', '#17becf', '#c7c7c7']
+    dfr['color'] = ['#2ca02c', '#8c564b', '#e377c2', '#17becf', '#c7c7c7']
 
     #
     # Plot
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels)
 
-    yticks = np.array([0, 1, 2]). # + (width / 2)
+    yticks = np.array([0, 1, 2]) # + (width / 2)
     ax.set_yticks(yticks)
     ax.set_yticklabels(['Race', 'Age', 'Gender'])
 

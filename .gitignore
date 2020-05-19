@@ -2,6 +2,8 @@
 config.ini
 data/
 03-geo_analysis/data/
+*.gpickle
+*.graphml
 *.pdf
 *.DS_Store
 

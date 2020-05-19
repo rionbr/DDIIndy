@@ -74,6 +74,7 @@ CREATE INDEX idx_dw_coadmin_age ON dw_coadministration (age);
 CREATE INDEX idx_dw_coadmin_race ON dw_coadministration (race);
 CREATE INDEX idx_dw_coadmin_id_drug_i ON dw_coadministration (id_drug_i);
 CREATE INDEX idx_dw_coadmin_id_drug_j ON dw_coadministration (id_drug_j);
+CREATE INDEX idx_dw_coadmin_id_drug_i_j ON dw_coadministration (id_drug_i, id_drug_j);
 CREATE INDEX idx_dw_coadmin_is_ddi ON dw_coadministration (is_ddi);
 
 /*

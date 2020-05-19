@@ -44,7 +44,7 @@ if __name__ == '__main__':
     patients = patients_male + patients_female
 
     #
-    # Load Drugs Administratio
+    # Load Drugs Administrations
     #
     sqld = """
         SELECT
@@ -96,8 +96,8 @@ if __name__ == '__main__':
             ('len_i', 'sum'),
             ('len_j', 'sum'),
             ('len_ij', ['sum', 'mean', 'std']),
-            #('class_i', 'first'),
-            #('class_j', 'first'),
+            ('class_i', 'first'),
+            ('class_j', 'first'),
             ('ddi_description', 'first'),
             ('ddi_severity', 'first'),
             ('tau', 'sum')

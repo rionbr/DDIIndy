@@ -64,7 +64,7 @@ if __name__ == '__main__':
     """
     dfi = pd.read_sql(sqli, con=engine, index_col='ddi_severity')
     dfi.loc['Major & Moderate', 'inter'] = dfi.loc[['Major', 'Moderate'], 'inter'].sum()
-    dfi.loc['Moderate & Minor', 'inter'] = dfi.loc[['Major', 'Moderate'], 'inter'].sum()
+    dfi.loc['Moderate & Minor', 'inter'] = dfi.loc[['Moderate', 'Minor'], 'inter'].sum()
 
     #
     # Total patients with at least one interaction

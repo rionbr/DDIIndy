@@ -25,54 +25,6 @@ set_of_interactions = set()
 worker_data = []
 
 
-def parallel_overlap_worker(row, dfD):
-    id_drug_i = row['id_drug_i']
-    id_drug_j = row['id_drug_j']
-    # Order Drug Names Alphabetically
-    if id_drug_i > id_drug_j:
-        id_drug_i, id_drug_j = id_drug_j, id_drug_i
-
-    dfi = dfD.loc[dfD['id_drug'] == id_drug_i, :]
-    dfj = dfD.loc[dfD['id_drug'] == id_drug_j, :]
-
-    dfi = dfi.sort_values(['dt_start', 'dt_end'], ascending=[True, False])
-    dfj = dfj.sort_values(['dt_start', 'dt_end'], ascending=[True, False])
-
-    # number of dispensations
-    qt_i = dfi.shape[0]
-    qt_j = dfj.shape[0]
-    dfMi = pd.DataFrame.from_dict(
-        {
-            'i-%s' % i: {
-                t: True for t in pd.date_range(r['dt_start'], r['dt_end']).tolist()
-            } for i, r in dfi.iterrows()
-        }).sum(axis=1).rename(id_drug_i)
-    dfMj = pd.DataFrame.from_dict(
-        {
-            'j-%s' % i: {
-                t: True for t in pd.date_range(r['dt_start'], r['dt_end']).tolist()
-            } for i, r in dfj.iterrows()
-        }).sum(axis=1).rename(id_drug_j)
-
-    #
-    dfM = pd.concat([dfMi, dfMj], axis=1).dropna(axis='index', how='all')
-
-    counts = dfM.sum(axis=0).astype(int).to_dict()
-
-    len_i = counts[id_drug_i]
-    len_j = counts[id_drug_j]
-
-    len_ij = dfM.dropna(axis='index', how='any').shape[0]
-
-    # Check if there is an interaction
-    if frozenset((id_drug_i, id_drug_j)) in set_of_interactions:
-        is_ddi = True
-    else:
-        is_ddi = False
-
-    return pd.Series({'qt_i': qt_i, 'qt_j': qt_j, 'len_i': len_i, 'len_j': len_j, 'len_ij': len_ij, 'is_ddi': is_ddi})
-
-
 def parallel_query_worker(data):
     id_patient, queue = data
     dt_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -110,28 +62,44 @@ def parallel_query_worker(data):
         return 0
     else:
 
-        unique_drugs = dfD['id_drug'].unique().tolist()
-        # Combination ij
-        pairs_drugs = combinations(unique_drugs, 2)
-        # id_i < id_j
-        pairs_drugs = [(id_drug_i, id_drug_j) if (id_drug_i < id_drug_j) else (id_drug_j, id_drug_i) for id_drug_i, id_drug_j in pairs_drugs]
-        # to DataFrame
-        dfij = pd.DataFrame(pairs_drugs, columns=['id_drug_i', 'id_drug_j'])
-        dfij['id_patient'] = id_patient
+        # Results
+        r = []
 
-        # Calculates Overlap
-        dfO = dfij.swifter.progress_bar(enable=False).apply(parallel_overlap_worker, axis='columns', args=(dfD, ))
+        # Calculate Intervals
+        dfD['interval'] = dfD.apply(lambda r: pd.Interval(r['dt_start'], r['dt_end'], closed='both'), axis='columns')
 
-        # Only Keep results that contain at least one co-administration
-        dfO = dfO.loc[dfO['len_ij'] > 0, :]
+        # Loop combination of all rows
+        for (i, j) in list(combinations(dfD.index, 2)):
+            # .at is faster than .loc
+            id_drug_i = dfD.at[i, 'id_drug']
+            id_drug_j = dfD.at[j, 'id_drug']
+            #
+            if id_drug_i > id_drug_j:
+                i, j = j, i
+                id_drug_i, id_drug_j = id_drug_j, id_drug_i
+            #
+            interval_i = dfD.at[i, 'interval']
+            interval_j = dfD.at[j, 'interval']
 
-        # Result DataFrame
-        dfR = pd.concat([dfij, dfO], axis='columns', sort=False)
+            # There is administration overlap
+            if interval_i.overlaps(interval_j):
+
+                # Overlap length/start/end
+                length = min(interval_i.right - interval_j.left, interval_j.right - interval_i.left).days + 1
+                dt_start = max(interval_i.left, interval_j.left)
+                dt_end = min(interval_i.right, interval_j.right)
+
+                # Is this coadministration DDI
+                if frozenset((id_drug_i, id_drug_j)) in set_of_interactions:
+                    is_ddi = True
+                else:
+                    is_ddi = False
+                r.append((id_patient, id_drug_i, id_drug_j, dt_start, dt_end, length, is_ddi))
 
         # Insert to MySQL
-        if len(dfR):
-            dfR = dfR.loc[:, ['id_patient', 'id_drug_i', 'id_drug_j', 'qt_i', 'qt_j', 'len_i', 'len_j', 'len_ij', 'is_ddi']]
-            dfR.to_sql(name='coadministration', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
+        if len(r):
+            dfR = pd.DataFrame(r, columns=['id_patient', 'id_drug_i', 'id_drug_j', 'dt_start', 'dt_end', 'length', 'is_ddi'])
+            dfR.to_sql(name='coadmin', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
 
         # Add Parsed Patient
         dt_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")

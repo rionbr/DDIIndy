@@ -71,12 +71,14 @@ def parallel_query_worker(data):
         # Loop combination of all rows
         for (i, j) in list(combinations(dfD.index, 2)):
             # .at is faster than .loc
-            id_drug_i = dfD.at[i, 'id_drug']
-            id_drug_j = dfD.at[j, 'id_drug']
+            id_medication_drug_i = dfD.at[i, 'id_medication_drug']
+            id_medication_drug_j = dfD.at[j, 'id_medication_drug']
             #
+            """
             if id_drug_i > id_drug_j:
                 i, j = j, i
                 id_drug_i, id_drug_j = id_drug_j, id_drug_i
+            """
             #
             interval_i = dfD.at[i, 'interval']
             interval_j = dfD.at[j, 'interval']
@@ -90,15 +92,17 @@ def parallel_query_worker(data):
                 dt_end = min(interval_i.right, interval_j.right)
 
                 # Is this coadministration DDI
+                """
                 if frozenset((id_drug_i, id_drug_j)) in set_of_interactions:
                     is_ddi = True
                 else:
                     is_ddi = False
-                r.append((id_patient, id_drug_i, id_drug_j, dt_start, dt_end, length, is_ddi))
+                """
+                r.append((id_patient, id_medication_drug_i, id_medication_drug_j, dt_start, dt_end, length))
 
         # Insert to MySQL
         if len(r):
-            dfR = pd.DataFrame(r, columns=['id_patient', 'id_drug_i', 'id_drug_j', 'dt_start', 'dt_end', 'lenght', 'is_ddi'])
+            dfR = pd.DataFrame(r, columns=['id_patient', 'id_medication_drug_i', 'id_medication_drug_j', 'dt_start', 'dt_end', 'lenght'])
             dfR.to_sql(name='coadmin', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
 
         # Add Parsed Patient
@@ -109,7 +113,7 @@ def parallel_query_worker(data):
         worker_engine.dispose()
         # Queue
         queue.put(id_patient)
-        return len(dfR)
+        return 1
 
 
 if __name__ == '__main__':

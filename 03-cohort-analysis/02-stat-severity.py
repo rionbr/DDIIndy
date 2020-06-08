@@ -165,3 +165,9 @@ if __name__ == '__main__':
     dfr['adult-patient-inter/adult-patients'] = (dfr['adult-patient-inter'] / adult_patients * 100)
 
     print(dfr)
+
+
+    # Export
+    wCSVfile = 'results/severity.csv'
+    ensurePathExists(wCSVfile)
+    dfr.to_csv(wCSVfile)

@@ -2,15 +2,12 @@
 # Author: Rion B Correia
 # Date: April 17, 2020
 #
-# Description: Plot risk of coadministration per age_group
+# Description: Plot risk of coadministration per age_group and race
 #
 #
-import configparser
 import numpy as np
 import pandas as pd
-import sqlalchemy
-from sqlalchemy import event
-from utils import add_own_encoders, ensurePathExists, map_age_to_age_group
+from utils import ensurePathExists
 import statsmodels.api as sm
 import matplotlib as mpl
 mpl.rcParams['mathtext.fontset'] = 'cm'
@@ -20,65 +17,8 @@ import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
 
-    # DB
-    cfg = configparser.ConfigParser()
-    cfg.read('../config.ini')
-    url = 'mysql+pymysql://%(user)s:%(pass)s@%(host)s/%(db)s?charset=utf8' % cfg['IU-RDC-MySQL']
-    engine = sqlalchemy.create_engine(url, encoding='utf-8')
-    event.listen(engine, "before_cursor_execute", add_own_encoders)
-
-    #
-    # Total patients with at least one administration
-    #
-    sqlp = """
-        SELECT
-            p.age_today,
-            p.gender,
-            COUNT(*) AS 'patient'
-        FROM patient p
-        WHERE
-            p.age_today IS NOT NULL
-            AND
-            p.id_patient IN (SELECT m.id_patient FROM medication m)
-        GROUP BY p.age_today, p.gender
-    """
-    dfp = pd.read_sql(sqlp, con=engine, index_col='age_today')
-    # Map age to age_group
-    dfp['age_group'] = map_age_to_age_group(dfp.index)
-    # Group by age_group
-    dfp = dfp.groupby(['gender', 'age_group']).agg({'patient': 'sum'})
-    #
-    # Total patients with at least one coadministration
-    #
-    sqlc = """
-        SELECT
-            t.age,
-            t.gender,
-            COUNT(*) as 'patient-coadmin'
-        FROM (
-            SELECT
-                c.id_patient,
-                c.gender,
-                c.age,
-                COUNT(*) AS 'coadmin'
-            FROM dw_coadministration c
-            WHERE
-                c.age IS NOT NULL
-            GROUP BY c.id_patient, c.age, c.gender
-        ) as t
-        GROUP BY t.age, t.gender
-    """
-    dfc = pd.read_sql(sqlc, con=engine, index_col='age')
-    # Map age to age_group
-    dfc['age_group'] = map_age_to_age_group(dfc.index)
-    # Group by age_group
-    dfc = dfc.groupby(['gender', 'age_group']).agg({'patient-coadmin': 'sum'})
-    # Concat Results
-    dfr = pd.concat([dfp, dfc], axis='columns', sort='False').fillna(0)
-    # Risk of CoAdministration (per gender & age_group)
-    dfr.loc[('Male', slice(None)), 'RC^{[y1,y2]}'] = dfr.loc[('Male', slice(None)), 'patient-coadmin'] / dfr.loc[('Male', slice(None)), 'patient']
-    dfr.loc[('Female', slice(None)), 'RC^{[y1,y2]}'] = dfr.loc[('Female', slice(None)), 'patient-coadmin'] / dfr.loc[('Female', slice(None)), 'patient']
-
+    # Load data
+    dfr = pd.read_csv('results/age-race.csv', index_col=['race', 'age_group'])
     print(dfr)
 
     #

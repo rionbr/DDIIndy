@@ -163,8 +163,18 @@ if __name__ == '__main__':
     gdp1['race-white-norm'] = gdp1['race-white'] / gdp1['population']
     gdp1['race-black-norm'] = gdp1['race-black'] / gdp1['population']
     gdp1['race-hispanic-norm'] = gdp1['race-hispanic'] / gdp1['population']
-    
-
+    # Population before-after retirement
+    cols_retired_males = ['DP0010034', 'DP0010035', 'DP0010036', 'DP0010037', 'DP0010038']
+    cols_non_retired_males = ['DP0010021', 'DP0010022', 'DP0010023', 'DP0010024', 'DP0010025', 'DP0010026', 'DP0010027', 'DP0010028', 'DP0010029', 'DP0010030', 'DP0010031', 'DP0010032', 'DP0010033']
+    gdp1['retired-male'] = gdp1[cols_retired_males].sum(axis='columns')
+    gdp1['non-retired-male'] = gdp1[cols_non_retired_males].sum(axis='columns')
+    cols_retired_females = ['DP0010053', 'DP0010054', 'DP0010055', 'DP0010056', 'DP0010057']
+    cols_non_retired_females = ['DP0010040', 'DP0010041', 'DP0010042', 'DP0010043', 'DP0010044', 'DP0010045', 'DP0010046', 'DP0010047', 'DP0010048', 'DP0010049', 'DP0010050', 'DP0010051', 'DP0010052']
+    gdp1['retired-female'] = gdp1[cols_retired_females].sum(axis='columns')
+    gdp1['non-retired-female'] = gdp1[cols_non_retired_females].sum(axis='columns')
+    gdp1['retired'] = gdp1['retired-male'] + gdp1['retired-female']
+    gdp1['non-retired'] = gdp1['non-retired-male'] + gdp1['non-retired-female']
+    gdp1['retired-ratio'] = gdp1['retired'] / gdp1['non-retired']
     #
     # Plot
     #
@@ -180,6 +190,9 @@ if __name__ == '__main__':
     plot_indianapolis_map(gdf=gdp1, var='race-white-norm', title='Race (White)', cmap='Greys', vmin=0, vmax=1, wIMGfile='images/img-race-white.pdf')
     plot_indianapolis_map(gdf=gdp1, var='race-black-norm', title='Race (Black or African American)', cmap='Greys', vmin=0, vmax=1, wIMGfile='images/img-race-black.pdf')
     plot_indianapolis_map(gdf=gdp1, var='race-hispanic-norm', title='Race (Hispanic)', cmap='Greys', vmin=0, vmax=1, wIMGfile='images/img-race-hispanic.pdf')
+
+    # Retired
+    plot_indianapolis_map(gdf=gdp1, var='retired-ratio', title=r'Retirement ratio ($\Omega^{y \geq 65} / \Omega^{y < 65}$)', cmap='PuRd', vmin=0, vmax=1, wIMGfile='images/img-retirement.pdf')
 
     # IRS Income
     dfincome = pd.read_csv('data/17zpallagi.csv')

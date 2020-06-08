@@ -98,7 +98,7 @@ def parallel_query_worker(data):
 
         # Insert to MySQL
         if len(r):
-            dfR = pd.DataFrame(r, columns=['id_patient', 'id_drug_i', 'id_drug_j', 'dt_start', 'dt_end', 'length', 'is_ddi'])
+            dfR = pd.DataFrame(r, columns=['id_patient', 'id_drug_i', 'id_drug_j', 'dt_start', 'dt_end', 'lenght', 'is_ddi'])
             dfR.to_sql(name='coadmin', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
 
         # Add Parsed Patient

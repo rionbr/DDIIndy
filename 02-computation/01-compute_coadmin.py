@@ -27,7 +27,7 @@ worker_data = []
 
 def parallel_query_worker(data):
     id_patient, queue = data
-    dt_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    worker_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # Worker engine
     worker_engine = sqlalchemy.create_engine(url, encoding='utf-8')
     event.listen(worker_engine, "before_cursor_execute", add_own_encoders)
@@ -52,9 +52,9 @@ def parallel_query_worker(data):
     # Return earlier if no dispensation for this patient
     if len(dfD) <= 1:
         # Add Parsed Patient
-        dt_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        worker_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         sql = "INSERT INTO helper_patient_parsed (id_patient, dt_start, dt_end) VALUES ({id_patient:d}, '{dt_start:s}', '{dt_end:s}')".\
-            format(id_patient=id_patient, dt_start=dt_start, dt_end=dt_end)
+            format(id_patient=id_patient, dt_start=worker_start, dt_end=worker_end)
         worker_engine.execute(sql)
         worker_engine.dispose()
         # Queue
@@ -102,13 +102,13 @@ def parallel_query_worker(data):
 
         # Insert to MySQL
         if len(r):
-            dfR = pd.DataFrame(r, columns=['id_patient', 'id_medication_drug_i', 'id_medication_drug_j', 'dt_start', 'dt_end', 'lenght'])
+            dfR = pd.DataFrame(r, columns=['id_patient', 'id_medication_drug_i', 'id_medication_drug_j', 'dt_start', 'dt_end', 'length'])
             dfR.to_sql(name='coadmin', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
 
         # Add Parsed Patient
-        dt_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        worker_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         sql = "INSERT INTO helper_patient_parsed (id_patient, dt_start, dt_end) VALUES ({id_patient:d}, '{dt_start:s}', '{dt_end:s}')".\
-            format(id_patient=id_patient, dt_start=dt_start, dt_end=dt_end)
+            format(id_patient=id_patient, dt_start=worker_start, dt_end=worker_end)
         worker_engine.execute(sql)
         worker_engine.dispose()
         # Queue

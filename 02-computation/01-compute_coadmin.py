@@ -13,6 +13,7 @@ pd.set_option('display.width', 300)
 import swifter
 import sqlalchemy
 from sqlalchemy import event
+from sqlalchemy.pool import NullPool
 from utils import add_own_encoders
 from itertools import combinations
 from time import sleep
@@ -29,7 +30,7 @@ def parallel_query_worker(data):
     id_patient, queue = data
     worker_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # Worker engine
-    worker_engine = sqlalchemy.create_engine(url, encoding='utf-8')
+    worker_engine = sqlalchemy.create_engine(url, poolclass=NullPool, encoding='utf-8')
     event.listen(worker_engine, "before_cursor_execute", add_own_encoders)
 
     sqld = """
@@ -121,7 +122,7 @@ if __name__ == '__main__':
     cfg = configparser.ConfigParser()
     cfg.read('../config.ini')
     url = 'mysql+pymysql://%(user)s:%(pass)s@%(host)s:%(port)s/%(db)s?charset=utf8' % cfg['IU-RDC-MySQL']
-    engine = sqlalchemy.create_engine(url, encoding='utf-8')
+    engine = sqlalchemy.create_engine(url, poolclass=NullPool, encoding='utf-8')
     event.listen(engine, "before_cursor_execute", add_own_encoders)
 
     print('Load DB Interactions')

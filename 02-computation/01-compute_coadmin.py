@@ -13,7 +13,6 @@ pd.set_option('display.width', 300)
 import swifter
 import sqlalchemy
 from sqlalchemy import event
-from sqlalchemy.pool import NullPool
 from utils import add_own_encoders
 from itertools import combinations
 from time import sleep
@@ -30,8 +29,8 @@ def parallel_query_worker(data):
     id_patient, queue = data
     worker_start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # Worker engine
-    worker_engine = sqlalchemy.create_engine(url, poolclass=NullPool, encoding='utf-8')
-    event.listen(worker_engine, "before_cursor_execute", add_own_encoders)
+    engine = sqlalchemy.create_engine(url, pool_size=24, max_overflow=0, encoding='utf-8')
+    event.listen(engine, "before_cursor_execute", add_own_encoders)
 
     sqld = """
         SELECT
@@ -48,7 +47,7 @@ def parallel_query_worker(data):
             m.id_patient = {id_patient:d}
     """.format(id_patient=id_patient)
 
-    dfD = pd.read_sql(sql=sqld, con=worker_engine)
+    dfD = pd.read_sql(sql=sqld, con=engine)
 
     # Return earlier if no dispensation for this patient
     if len(dfD) <= 1:
@@ -56,8 +55,8 @@ def parallel_query_worker(data):
         worker_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         sql = "INSERT INTO helper_patient_parsed (id_patient, dt_start, dt_end) VALUES ({id_patient:d}, '{dt_start:s}', '{dt_end:s}')".\
             format(id_patient=id_patient, dt_start=worker_start, dt_end=worker_end)
-        worker_engine.execute(sql)
-        worker_engine.dispose()
+        engine.execute(sql)
+        engine.dispose()
         # Queue
         queue.put(id_patient)
         return 0
@@ -103,14 +102,14 @@ def parallel_query_worker(data):
         # Insert to MySQL
         if len(r):
             dfR = pd.DataFrame(r, columns=['id_patient', 'id_medication_drug_i', 'id_medication_drug_j', 'id_drug_i', 'id_drug_j', 'dt_start', 'dt_end', 'length', 'is_ddi'])
-            dfR.to_sql(name='coadmin', con=worker_engine, if_exists='append', index=False, chunksize=500, method='multi')
+            dfR.to_sql(name='coadmin', con=engine, if_exists='append', index=False, chunksize=5000, method='multi')
 
         # Add Parsed Patient
         worker_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         sql = "INSERT INTO helper_patient_parsed (id_patient, dt_start, dt_end) VALUES ({id_patient:d}, '{dt_start:s}', '{dt_end:s}')".\
             format(id_patient=id_patient, dt_start=worker_start, dt_end=worker_end)
-        worker_engine.execute(sql)
-        worker_engine.dispose()
+        engine.execute(sql)
+        engine.dispose()
         # Queue
         queue.put(id_patient)
         return 1
@@ -122,7 +121,7 @@ if __name__ == '__main__':
     cfg = configparser.ConfigParser()
     cfg.read('../config.ini')
     url = 'mysql+pymysql://%(user)s:%(pass)s@%(host)s:%(port)s/%(db)s?charset=utf8' % cfg['IU-RDC-MySQL']
-    engine = sqlalchemy.create_engine(url, poolclass=NullPool, encoding='utf-8')
+    engine = sqlalchemy.create_engine(url, pool_size=1, max_overflow=0, encoding='utf-8')
     event.listen(engine, "before_cursor_execute", add_own_encoders)
 
     print('Load DB Interactions')
@@ -177,4 +176,5 @@ if __name__ == '__main__':
             pool.close()
             pool.join()
 
+    engine.dispose()
     print('Done.')

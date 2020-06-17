@@ -10,15 +10,15 @@ import pandas as pd
 pd.set_option('display.max_rows', 10)
 pd.set_option('display.max_columns', 300)
 pd.set_option('display.width', 300)
-import swifter
 import sqlalchemy
 from sqlalchemy import event
+from sqlalchemy.exc import SQLAlchemyError
 from utils import add_own_encoders
 from itertools import combinations
 from time import sleep
 from datetime import datetime
 import multiprocessing as mp
-
+import time
 
 url = ''
 set_of_interactions = set()
@@ -102,7 +102,14 @@ def parallel_query_worker(data):
         # Insert to MySQL
         if len(r):
             dfR = pd.DataFrame(r, columns=['id_patient', 'id_medication_drug_i', 'id_medication_drug_j', 'id_drug_i', 'id_drug_j', 'dt_start', 'dt_end', 'length', 'is_ddi'])
-            dfR.to_sql(name='coadmin', con=engine, if_exists='append', index=False, chunksize=5000, method='multi')
+            for attempt in range(10):
+                try:
+                    dfR.to_sql(name='coadmin', con=engine, if_exists='append', index=False, chunksize=5000, method='multi')
+                    break
+                except SQLAlchemyError as e:
+                    error = str(e.__dict__['orig'])
+                    print("-- Problem inserting patient {id_patient:d}. Retrying # {attempt:d}. Error: {error:s}".format(id_patient=id_patient, attempt=attempt, error=error))
+                    time.sleep(pow(2, attempt))
 
         # Add Parsed Patient
         worker_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
@@ -130,7 +137,7 @@ if __name__ == '__main__':
     set_of_interactions = set([frozenset((i, j)) for i, j in dfI.itertuples(index=False, name=None)])
 
     # Truncate table
-    # print('Truncating Table')
+    print('Truncating Table')
     Q = engine.execute("TRUNCATE TABLE coadmin")
     Q = engine.execute("TRUNCATE TABLE helper_patient_parsed")
     #

@@ -47,7 +47,15 @@ def parallel_query_worker(data):
             m.id_patient = {id_patient:d}
     """.format(id_patient=id_patient)
 
-    dfD = pd.read_sql(sql=sqld, con=engine)
+    # Load patient medication_drug
+    for attempt in range(10):
+        try:
+            dfD = pd.read_sql(sql=sqld, con=engine)
+            break
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            print("-- Problem querying patient {id_patient:d}. Retrying # {attempt:d}. Error: {error:s}".format(id_patient=id_patient, attempt=attempt, error=error))
+            time.sleep(pow(2, attempt))
 
     # Return earlier if no dispensation for this patient
     if len(dfD) <= 1:
